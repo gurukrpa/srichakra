@@ -7,7 +7,7 @@ const UnicefHome = () => {
   const [language, setLanguage] = useState('English');
 
   return (
-    <div className="min-h-screen bg-[#EDF6F9]">
+    <div className="min-h-screen bg-[#83C5BE]">
       {/* Top bar with language selector */}
       <div className="bg-white p-2 flex justify-end items-center">
         <div className="flex items-center gap-1 cursor-pointer">
@@ -18,7 +18,7 @@ const UnicefHome = () => {
       </div>
 
       {/* Header with logo and buttons */}
-      <header className="bg-[#FFDDD2] text-black p-4">
+      <header className="bg-[#83C5BE] text-black p-4">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="font-bold text-2xl">unicef</div>
@@ -28,7 +28,7 @@ const UnicefHome = () => {
             <Button variant="outline" className="text-black border-black hover:bg-[#FFD0BD]">
               Press centre
             </Button>
-            <Button className="bg-white text-[#FFDDD2] hover:bg-gray-100">
+            <Button className="bg-white text-[#83C5BE] hover:bg-gray-100">
               Donate
             </Button>
           </div>
@@ -83,7 +83,7 @@ const UnicefHome = () => {
           <div className="text-white p-6 max-w-lg">
             <h1 className="text-4xl font-bold mb-2">Staying and delivering for children</h1>
             <p className="text-xl mb-4">If others are forced to step back, who's going to stay?</p>
-            <Button className="bg-[#FFDDD2] hover:bg-[#FFD0BD] text-black uppercase font-bold">
+            <Button className="bg-[#83C5BE] hover:bg-[#70B0A8] text-black uppercase font-bold">
               I AM
             </Button>
           </div>
