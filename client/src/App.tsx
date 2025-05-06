@@ -4,11 +4,13 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import CodeEditor from "@/pages/CodeEditor";
+import UnicefHome from "@/pages/UnicefHome";
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={CodeEditor} />
+      <Route path="/" component={UnicefHome} />
+      <Route path="/code-editor" component={CodeEditor} />
       <Route component={NotFound} />
     </Switch>
   );
