@@ -202,31 +202,25 @@ const UnicefHome = () => {
           <ul className="flex">
             <li className="relative group">
               <a href="#" className="block px-4 py-3 hover:bg-gray-100 flex items-center">
-                What we do
+                DMIT
                 <ChevronDown className="h-4 w-4 ml-1" />
               </a>
             </li>
             <li className="relative group">
               <a href="#" className="block px-4 py-3 hover:bg-gray-100 flex items-center">
-                Research and reports
+                Career Counseling
                 <ChevronDown className="h-4 w-4 ml-1" />
               </a>
             </li>
             <li className="relative group">
               <a href="#" className="block px-4 py-3 hover:bg-gray-100 flex items-center">
-                Stories
+                Overseas Admission
                 <ChevronDown className="h-4 w-4 ml-1" />
               </a>
             </li>
             <li className="relative group">
               <a href="#" className="block px-4 py-3 hover:bg-gray-100 flex items-center">
-                Who we are
-                <ChevronDown className="h-4 w-4 ml-1" />
-              </a>
-            </li>
-            <li className="relative group">
-              <a href="#" className="block px-4 py-3 hover:bg-gray-100 flex items-center">
-                Take action
+                Bridging Courses
                 <ChevronDown className="h-4 w-4 ml-1" />
               </a>
             </li>
