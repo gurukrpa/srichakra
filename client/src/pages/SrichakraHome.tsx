@@ -3,6 +3,8 @@ import { Link } from 'wouter';
 import { ChevronDown, Search, Globe, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SrichakraText from '@/components/custom/SrichakraText';
+// Import Accordion components
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 // Import the Sri Yantra image
 import sriYantraLogo from '../assets/images/logo/sri-yantra.png';
 // Import children images for slideshow
@@ -25,6 +27,10 @@ const UnicefHome = () => {
   // For tracking if we need to reset
   const lastSlideRef = useRef(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Add state to track which accordion is open
+  const [openAccordion, setOpenAccordion] = useState<string | null>(null);
+  const navRef = useRef<HTMLDivElement>(null);
 
   // Check for user data in localStorage on component mount
   useEffect(() => {
@@ -37,6 +43,20 @@ const UnicefHome = () => {
       console.error('Error retrieving user data:', error);
     }
   }, []);
+
+  // Add click outside listener to close accordion
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(event.target as Node) && openAccordion) {
+        setOpenAccordion(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openAccordion]);
 
   // Handle logout
   const handleLogout = () => {
@@ -197,32 +217,104 @@ const UnicefHome = () => {
       </header>
 
       {/* Navigation menu - shifted items to the right */}
-      <nav className="bg-white border-b shadow-sm">
+      <nav className="bg-white border-b shadow-sm" ref={navRef}>
         <div className="container mx-auto flex justify-end items-center">
           <ul className="flex">
             <li className="relative group">
-              <a href="#" className="block px-4 py-3 hover:bg-gray-100 flex items-center">
-                DMIT
-                <ChevronDown className="h-4 w-4 ml-1" />
-              </a>
+              <Accordion 
+                type="single" 
+                collapsible 
+                className="w-full"
+                value={openAccordion}
+                onValueChange={setOpenAccordion}
+              >
+                <AccordionItem value="dmit" className="border-none">
+                  <AccordionTrigger className="py-3 px-4 hover:bg-gray-100">
+                    DMIT
+                  </AccordionTrigger>
+                  <AccordionContent className="bg-white shadow-md rounded-b-md px-4 py-3 absolute z-10 w-80">
+                    <h3 className="font-medium mb-2">What is DMIT?</h3>
+                    <p className="text-sm text-gray-700">
+                      DMIT (Dermatoglyphics Multiple Intelligence Test) is a scientific tool that analyzes a child's fingerprint patterns to reveal their inborn talents, learning style, memory capacity, and dominant brain traits.
+                    </p>
+                    <p className="text-sm text-gray-700 mt-2">
+                      It helps parents understand their child's natural potential and make informed decisions about education, career, and personal development.
+                    </p>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </li>
             <li className="relative group">
-              <a href="#" className="block px-4 py-3 hover:bg-gray-100 flex items-center">
-                Career Counseling
-                <ChevronDown className="h-4 w-4 ml-1" />
-              </a>
+              <Accordion 
+                type="single" 
+                collapsible 
+                className="w-full"
+                value={openAccordion}
+                onValueChange={setOpenAccordion}
+              >
+                <AccordionItem value="career" className="border-none">
+                  <AccordionTrigger className="py-3 px-4 hover:bg-gray-100">
+                    Career Counseling
+                  </AccordionTrigger>
+                  <AccordionContent className="bg-white shadow-md rounded-b-md px-4 py-3 absolute z-10 w-80">
+                    <h3 className="font-medium mb-2">What is Career Counseling?</h3>
+                    <p className="text-sm text-gray-700">
+                      Career counseling is a guided process that helps students and individuals discover their strengths, interests, and aptitudes to make smart educational and career choices.
+                    </p>
+                    <p className="text-sm text-gray-700 mt-2">
+                      It provides clarity, direction, and confidence to pursue the right academic path or profession that aligns with their true potential.
+                    </p>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </li>
             <li className="relative group">
-              <a href="#" className="block px-4 py-3 hover:bg-gray-100 flex items-center">
-                Overseas Admission
-                <ChevronDown className="h-4 w-4 ml-1" />
-              </a>
+              <Accordion 
+                type="single" 
+                collapsible 
+                className="w-full"
+                value={openAccordion}
+                onValueChange={setOpenAccordion}
+              >
+                <AccordionItem value="overseas" className="border-none">
+                  <AccordionTrigger className="py-3 px-4 hover:bg-gray-100">
+                    Overseas Admission
+                  </AccordionTrigger>
+                  <AccordionContent className="bg-white shadow-md rounded-b-md px-4 py-3 absolute z-10 w-80">
+                    <h3 className="font-medium mb-2">What is Overseas Admission?</h3>
+                    <p className="text-sm text-gray-700">
+                      Overseas admission guidance helps students explore global education opportunities by assisting with course selection, university applications, visa processes, and scholarships.
+                    </p>
+                    <p className="text-sm text-gray-700 mt-2">
+                      It opens the door to world-class learning and international career prospects.
+                    </p>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </li>
             <li className="relative group">
-              <a href="#" className="block px-4 py-3 hover:bg-gray-100 flex items-center">
-                Bridging Courses
-                <ChevronDown className="h-4 w-4 ml-1" />
-              </a>
+              <Accordion 
+                type="single" 
+                collapsible 
+                className="w-full"
+                value={openAccordion}
+                onValueChange={setOpenAccordion}
+              >
+                <AccordionItem value="bridging" className="border-none">
+                  <AccordionTrigger className="py-3 px-4 hover:bg-gray-100">
+                    Bridging Courses
+                  </AccordionTrigger>
+                  <AccordionContent className="bg-white shadow-md rounded-b-md px-4 py-3 absolute z-50 w-96 max-h-[400px] overflow-y-auto right-0">
+                    <h3 className="font-medium mb-2">What are Bridging Courses?</h3>
+                    <p className="text-sm text-gray-700">
+                      Bridging courses are short-term programs designed to fill academic or skill gaps, helping students prepare for advanced education or career transitions.
+                    </p>
+                    <p className="text-sm text-gray-700 mt-2">
+                      They are ideal for aligning with international standards or meeting prerequisites for specialized fields.
+                    </p>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </li>
           </ul>
           <div className="pl-4">
@@ -301,6 +393,94 @@ const UnicefHome = () => {
           box-sizing: border-box;
         }
       `}} />
+
+      {/* Poster Grid Section */}
+      <section className="py-12 bg-[#F7EDE2]">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-8 text-[#006D77]">Our Services</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* DMIT Card */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-105">
+              <div className="h-48 overflow-hidden">
+                <img 
+                  src={dmitWonder} 
+                  alt="DMIT" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-4">
+                <h3 className="text-xl font-semibold mb-2 text-[#006D77]">DMIT</h3>
+                <p className="text-gray-600 mb-4">Discover your child's inborn talents through fingerprint analysis.</p>
+                <Link href={user ? "/dmit" : "/login"}>
+                  <Button className="w-full bg-[#006D77] hover:bg-[#005964]">
+                    {user ? "Learn More" : "Login to Access"}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Career Counseling Card */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-105">
+              <div className="h-48 overflow-hidden">
+                <img 
+                  src={brain} 
+                  alt="Career Counseling" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-4">
+                <h3 className="text-xl font-semibold mb-2 text-[#006D77]">Career Counseling</h3>
+                <p className="text-gray-600 mb-4">Get expert guidance for making informed career decisions.</p>
+                <Link href={user ? "/career" : "/login"}>
+                  <Button className="w-full bg-[#006D77] hover:bg-[#005964]">
+                    {user ? "Learn More" : "Login to Access"}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Overseas Admission Card */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-105">
+              <div className="h-48 overflow-hidden">
+                <img 
+                  src={iquery} 
+                  alt="Overseas Admission" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-4">
+                <h3 className="text-xl font-semibold mb-2 text-[#006D77]">Overseas Admission</h3>
+                <p className="text-gray-600 mb-4">Explore global education opportunities with our assistance.</p>
+                <Link href={user ? "/overseas" : "/login"}>
+                  <Button className="w-full bg-[#006D77] hover:bg-[#005964]">
+                    {user ? "Learn More" : "Login to Access"}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Bridging Courses Card */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-105">
+              <div className="h-48 overflow-hidden">
+                <img 
+                  src={child1} 
+                  alt="Bridging Courses" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-4">
+                <h3 className="text-xl font-semibold mb-2 text-[#006D77]">Bridging Courses</h3>
+                <p className="text-gray-600 mb-4">Fill academic gaps with our specialized short-term programs.</p>
+                <Link href={user ? "/bridging" : "/login"}>
+                  <Button className="w-full bg-[#006D77] hover:bg-[#005964]">
+                    {user ? "Learn More" : "Login to Access"}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Footer */}
       <footer className="bg-[#1a1a1a] text-white py-8">
