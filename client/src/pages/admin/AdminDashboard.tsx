@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { 
   Users, School, Calendar, Settings, BarChart, FileText, 
-  LogOut, Menu, X, Home, User, Bell
+  LogOut, Menu, X, Home, User, Bell, UserCheck
 } from 'lucide-react';
 import SrichakraText from '@/components/custom/SrichakraText';
 import { Button } from '@/components/ui/button';
@@ -11,12 +11,65 @@ import sriYantraLogo from '../../assets/images/logo/sri-yantra.png';
 
 const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { adminUser, logout } = useAdminAuth();
+  const { adminUser, logout, token } = useAdminAuth();
+  const [onlineUsers, setOnlineUsers] = useState([]);
+  
+  // Fetch online users
+  useEffect(() => {
+    const fetchOnlineUsers = async () => {
+      try {
+        // Skip if no token is available yet
+        if (!token) {
+          console.log('No token available, skipping online users fetch');
+          return;
+        }
+        
+        console.log('Fetching online users...');
+        const response = await fetch('http://localhost:5000/api/admin/online-users', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setOnlineUsers(data.onlineUsers || []);
+          console.log('Online users fetched:', data.onlineUsers?.length || 0);
+        } else {
+          console.warn('Failed to fetch online users:', response.status);
+          // Don't throw an error for non-critical features
+        }
+      } catch (error) {
+        console.error('Error fetching online users:', error);
+        // Silently handle the error for this non-critical feature
+      }
+    };
+    
+    fetchOnlineUsers();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchOnlineUsers, 30000);
+    
+    return () => clearInterval(interval);
+  }, [token]);
   
   // Handle logout
   const handleLogout = () => {
-    logout();
-    window.location.href = '/admin/login';
+    console.log('Logging out...');
+    try {
+      // Execute logout function from context
+      logout();
+      
+      // Redirect with absolute URL to ensure it works correctly
+      const baseUrl = window.location.origin;
+      console.log('Redirecting to login page...');
+      window.location.href = `${baseUrl}/admin/login`;
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // Force redirect even if logout fails
+      window.location.href = '/admin/login';
+    }
   };
   
   return (
@@ -53,7 +106,7 @@ const AdminDashboard = () => {
         {/* Admin info */}
         <div className="p-4 border-b border-[#005964]">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-[#FFDDD2] flex items-center justify-center text-[#006D77] font-bold">
+            <div className="h-10 w-10 rounded-full bg-[#FFDDD2] flex items-center justify-center text-[#006D77] font-bold" aria-label={`${adminUser.name} profile`}>
               {adminUser.name.charAt(0)}
             </div>
             <div>
@@ -108,6 +161,13 @@ const AdminDashboard = () => {
               </a>
             </Link>
             
+            <Link href="/admin/dashboard/team-members">
+              <a className="flex items-center gap-3 px-3 py-2 text-white rounded-md hover:bg-[#005964]">
+                <Users size={18} />
+                <span>Team Members</span>
+              </a>
+            </Link>
+            
             <Link href="/admin/dashboard/settings">
               <a className="flex items-center gap-3 px-3 py-2 text-white rounded-md hover:bg-[#005964]">
                 <Settings size={18} />
@@ -151,11 +211,26 @@ const AdminDashboard = () => {
             <h1 className="text-xl font-semibold text-gray-800">Admin Dashboard</h1>
           </div>
           
-          <div className="flex items-center gap-2">
-            <button className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100">
+          <div className="flex items-center gap-3">
+            {/* Online users indicator */}
+            <Link href="/admin/dashboard/team-members">
+              <a className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-sm">
+                <span className="relative">
+                  <UserCheck size={18} className="text-green-600" />
+                  {onlineUsers.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                      {onlineUsers.length}
+                    </span>
+                  )}
+                </span>
+                <span>Online</span>
+              </a>
+            </Link>
+            
+            <button className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100" aria-label="Notifications">
               <Bell size={20} />
             </button>
-            <button className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100">
+            <button className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100" aria-label="User profile">
               <User size={20} />
             </button>
           </div>
@@ -184,9 +259,9 @@ const AdminDashboard = () => {
             </div>
             
             <div className="bg-white rounded-lg shadow p-4">
-              <h3 className="text-sm font-medium text-gray-500">Revenue</h3>
-              <p className="text-2xl font-bold text-gray-800">₹48,250</p>
-              <div className="mt-1 text-xs text-red-500">↓ 3% from last month</div>
+              <h3 className="text-sm font-medium text-gray-500">Team Members</h3>
+              <p className="text-2xl font-bold text-gray-800">{onlineUsers.length}</p>
+              <div className="mt-1 text-xs text-green-500">Online Now</div>
             </div>
           </div>
           
@@ -268,7 +343,7 @@ const AdminDashboard = () => {
                     <span className="text-sm font-medium">65%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: '65%' }}></div>
+                    <div className="bg-blue-600 h-2 rounded-full w-[65%]"></div>
                   </div>
                 </div>
                 
@@ -278,7 +353,7 @@ const AdminDashboard = () => {
                     <span className="text-sm font-medium">42%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-green-500 h-2 rounded-full" style={{ width: '42%' }}></div>
+                    <div className="bg-green-500 h-2 rounded-full w-[42%]"></div>
                   </div>
                 </div>
                 
@@ -288,7 +363,7 @@ const AdminDashboard = () => {
                     <span className="text-sm font-medium">28%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-purple-500 h-2 rounded-full" style={{ width: '28%' }}></div>
+                    <div className="bg-purple-500 h-2 rounded-full w-[28%]"></div>
                   </div>
                 </div>
                 
@@ -298,7 +373,7 @@ const AdminDashboard = () => {
                     <span className="text-sm font-medium">15%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-yellow-500 h-2 rounded-full" style={{ width: '15%' }}></div>
+                    <div className="bg-yellow-500 h-2 rounded-full w-[15%]"></div>
                   </div>
                 </div>
               </div>

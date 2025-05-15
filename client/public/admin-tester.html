@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin System Tester</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f0f8fa;
+    }
+    h1, h2 {
+      color: #006D77;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+      gap: 15px;
+    }
+    .header img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+    }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background-color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input[type="text"], 
+    input[type="email"], 
+    input[type="password"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #006D77;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #005964;
+    }
+    button.secondary {
+      background-color: #83C5BE;
+    }
+    button.secondary:hover {
+      background-color: #6db5ae;
+    }
+    button.danger {
+      background-color: #e63946;
+    }
+    button.danger:hover {
+      background-color: #d62b39;
+    }
+    pre {
+      background-color: #eee;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .success {
+      color: green;
+    }
+    .error {
+      color: red;
+    }
+    .auth-status {
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    .auth-status.logged-in {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .auth-status.logged-out {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+    }
+    .tab {
+      padding: 10px 15px;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+    .tab.active {
+      border-bottom: 3px solid #006D77;
+      font-weight: bold;
+      color: #006D77;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="/favicon.svg" alt="Srichakra Logo">
+    <h1>Srichakra Admin System Tester</h1>
+  </div>
+  
+  <div class="auth-status" id="authStatus">
+    Checking authentication status...
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="login">Login Test</div>
+    <div class="tab" data-tab="api">API Test</div>
+    <div class="tab" data-tab="navigation">Navigation Test</div>
+    <div class="tab" data-tab="debug">Debug Tools</div>
+  </div>
+  
+  <div id="loginTab" class="tab-content active">
+    <div class="card">
+      <h2>Admin Login Tester</h2>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <input type="email" id="email" value="admin@srichakra.com" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input type="password" id="password" value="admin123" required>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="rememberMe"> Remember me
+          </label>
+        </div>
+        <button type="submit">Login</button>
+        <button type="button" class="secondary" onclick="fillDemoCredentials()">Use Demo Credentials</button>
+      </form>
+      <div class="form-group">
+        <label>Response:</label>
+        <pre id="loginResponse"></pre>
+      </div>
+    </div>
+  </div>
+  
+  <div id="apiTab" class="tab-content">
+    <div class="card">
+      <h2>API Connection Test</h2>
+      <button onclick="testLoginStatus()">Test Login Status API</button>
+      <button onclick="testOnlineUsers()">Test Online Users API</button>
+      <button onclick="testApiWithAuth()">Test Protected Endpoint</button>
+      <div class="form-group">
+        <label>Response:</label>
+        <pre id="apiResponse"></pre>
+      </div>
+    </div>
+  </div>
+  
+  <div id="navigationTab" class="tab-content">
+    <div class="card">
+      <h2>Navigation Links</h2>
+      <p>Use these links to test navigation between admin pages:</p>
+      <button onclick="navigateTo('/admin/login')">Admin Login</button>
+      <button onclick="navigateTo('/admin/dashboard')">Admin Dashboard</button>
+      <button onclick="navigateTo('/admin/team-members')">Team Members</button>
+      <button onclick="navigateTo('/admin/settings')">Settings</button>
+      <button onclick="navigateTo('/')">Back to Homepage</button>
+    </div>
+    
+    <div class="card">
+      <h2>Redirection Test</h2>
+      <p>Test specific redirects with parameters:</p>
+      <button onclick="navigateTo('/admin/login?redirect=team-members')">Login → Team Members</button>
+      <button onclick="navigateTo('/admin/login?redirect=settings')">Login → Settings</button>
+    </div>
+  </div>
+  
+  <div id="debugTab" class="tab-content">
+    <div class="card">
+      <h2>Auth Debug Tools</h2>
+      <button onclick="viewLocalStorage()">View localStorage</button>
+      <button onclick="clearAuthData()" class="danger">Clear Auth Data</button>
+      <button onclick="location.reload()">Refresh Page</button>
+      <div class="form-group">
+        <label>Storage Contents:</label>
+        <pre id="storageContents"></pre>
+      </div>
+    </div>
+  </div>
+  <h1>Admin System Tester</h1>
+  <p>This page helps test and debug the admin authentication flow.</p>
+  
+  <div class="card">
+    <h2>1. Authentication Status</h2>
+    <button onclick="checkAuthStatus()">Check Auth Status</button>
+    <button onclick="clearAuth()">Clear Auth Data</button>
+    <div id="auth-status"></div>
+  </div>
+  
+  <div class="card">
+    <h2>2. Test Login API</h2>
+    <div>
+      <label for="email">Email:</label>
+      <input type="email" id="email" value="admin@srichakra.com">
+    </div>
+    <div style="margin-top: 10px;">
+      <label for="password">Password:</label>
+      <input type="password" id="password" value="admin123">
+    </div>
+    <div style="margin-top: 15px;">
+      <button onclick="testLogin()">Test API Login</button>
+    </div>
+    <div id="login-result"></div>
+  </div>
+  
+  <div class="card">
+    <h2>3. Navigation Tests</h2>
+    <button onclick="navigate('/admin')">Go to /admin</button>
+    <button onclick="navigate('/admin/dashboard')">Go to /admin/dashboard</button>
+    <button onclick="navigate('/admin/team-members')">Go to /admin/team-members</button>
+    <button onclick="navigate('/admin/settings')">Go to /admin/settings</button>
+    <button onclick="navigate('/admin/login')">Go to /admin/login</button>
+    <button onclick="navigate('/admin/redirect?to=settings')">Redirect to Settings</button>
+  </div>
+  
+  <div class="card">
+    <h2>4. Debug Tools</h2>
+    <button onclick="consoleLog()">Log Auth Data to Console</button>
+    <button onclick="locationInfo()">Show Location Info</button>
+  </div>
+  
+  <script>
+    // Check authentication status
+    function checkAuthStatus() {
+      const statusDiv = document.getElementById('auth-status');
+      const token = localStorage.getItem('adminToken');
+      const user = localStorage.getItem('adminUser');
+      
+      if (token && user) {
+        try {
+          const userData = JSON.parse(user);
+          statusDiv.innerHTML = `
+            <p class="success">✓ Authenticated</p>
+            <pre>Token: ${token.substring(0, 20)}...
+User: ${JSON.stringify(userData, null, 2)}</pre>
+          `;
+        } catch (e) {
+          statusDiv.innerHTML = `
+            <p class="error">✗ Invalid user data format</p>
+            <pre>Token exists but user data is invalid</pre>
+          `;
+        }
+      } else {
+        statusDiv.innerHTML = `
+          <p class="error">✗ Not authenticated</p>
+          <pre>No authentication data found</pre>
+        `;
+      }
+    }
+    
+    // Clear authentication data
+    function clearAuth() {
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminUser');
+      localStorage.removeItem('adminEmail');
+      
+      const statusDiv = document.getElementById('auth-status');
+      statusDiv.innerHTML = '<p class="success">Auth data cleared successfully</p>';
+      
+      setTimeout(checkAuthStatus, 500);
+    }
+    
+    // Test login API
+    async function testLogin() {
+      const resultDiv = document.getElementById('login-result');
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      resultDiv.innerHTML = '<p>Testing login...</p>';
+      
+      try {
+        // Test login
+        const response = await fetch('http://localhost:5000/api/admin/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Store auth data
+          localStorage.setItem('adminToken', data.token);
+          localStorage.setItem('adminUser', JSON.stringify(data.user));
+          
+          resultDiv.innerHTML = `
+            <p class="success">✓ Login successful!</p>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+          `;
+        } else {
+          resultDiv.innerHTML = `
+            <p class="error">✗ Login failed</p>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+          `;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <p class="error">✗ Error: ${error.message}</p>
+          <pre>API might be unavailable or there could be a CORS issue</pre>
+        `;
+      }
+    }
+    
+    // Navigate to a path
+    function navigate(path) {
+      window.location.href = path;
+    }
+    
+    // Log auth data to console
+    function consoleLog() {
+      const token = localStorage.getItem('adminToken');
+      const user = localStorage.getItem('adminUser');
+      
+      console.log('Admin Auth Debug:');
+      console.log('- Token:', token);
+      console.log('- User:', user ? JSON.parse(user) : null);
+      
+      alert('Auth data logged to console. Press F12 to view.');
+    }
+    
+    // Show location info
+    function locationInfo() {
+      const info = {
+        href: window.location.href,
+        origin: window.location.origin,
+        pathname: window.location.pathname,
+        search: window.location.search,
+        host: window.location.host
+      };
+      
+      const statusDiv = document.getElementById('auth-status');
+      statusDiv.innerHTML = `
+        <h3>Location Information:</h3>
+        <pre>${JSON.stringify(info, null, 2)}</pre>
+      `;
+    }
+    
+    // Check auth status on page load
+    window.onload = checkAuthStatus;
+  </script>
+</body>
+</html>

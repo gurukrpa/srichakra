@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Navigation Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #006D77;
+      margin-bottom: 20px;
+    }
+    .nav-links {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 20px 0;
+    }
+    a {
+      display: inline-block;
+      padding: 10px 15px;
+      background-color: #006D77;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    a:hover {
+      background-color: #005964;
+    }
+    .debug-section {
+      margin-top: 30px;
+      padding: 15px;
+      background-color: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    button {
+      padding: 10px 15px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    .debug-info {
+      font-family: monospace;
+      white-space: pre-wrap;
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #eee;
+      border: 1px solid #ccc;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Admin Navigation Test</h1>
+  <p>This page tests navigation to various admin routes to identify any routing issues.</p>
+  
+  <div class="nav-links">
+    <a href="/admin/login">Go to Admin Login</a>
+    <a href="/admin/dashboard">Go to Admin Dashboard</a>
+    <a href="/admin/team-members">Go to Team Members</a>
+    <a href="/admin/settings">Go to Settings</a>
+    <a href="/admin">Go to Admin (root)</a>
+  </div>
+  
+  <div class="debug-section">
+    <h2>Debug & Authentication Tools</h2>
+    <button onclick="loginTest()">Test Login API</button>
+    <button onclick="viewAuthStatus()">View Auth Status</button>
+    <button onclick="clearAuthData()">Clear Auth Data</button>
+    <button onclick="refreshPage()">Refresh Page</button>
+    
+    <div id="debug-info" class="debug-info">
+      Check authentication status and debug information will appear here...
+    </div>
+  </div>
+  
+  <script>
+    async function loginTest() {
+      const debugInfo = document.getElementById('debug-info');
+      debugInfo.textContent = 'Running login test...';
+      
+      try {
+        // Test credentials
+        const email = 'admin@srichakra.com';
+        const password = 'admin123';
+        
+        // Try login
+        const response = await fetch('http://localhost:5000/api/admin/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Store auth data
+          localStorage.setItem('adminToken', data.token);
+          localStorage.setItem('adminUser', JSON.stringify(data.user));
+          
+          debugInfo.textContent = `Login successful!\nToken: ${data.token}\nUser: ${JSON.stringify(data.user, null, 2)}`;
+        } else {
+          debugInfo.textContent = `Login failed: ${data.message}`;
+        }
+      } catch (error) {
+        debugInfo.textContent = `Error: ${error.message}`;
+      }
+    }
+    
+    function viewAuthStatus() {
+      const debugInfo = document.getElementById('debug-info');
+      const token = localStorage.getItem('adminToken');
+      const user = localStorage.getItem('adminUser');
+      
+      if (token && user) {
+        debugInfo.textContent = `Authentication Status: Logged In\nToken: ${token}\nUser: ${user}`;
+      } else {
+        debugInfo.textContent = 'Authentication Status: Not Logged In';
+      }
+    }
+    
+    function clearAuthData() {
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminUser');
+      localStorage.removeItem('adminEmail');
+      
+      const debugInfo = document.getElementById('debug-info');
+      debugInfo.textContent = 'Authentication data cleared';
+    }
+    
+    function refreshPage() {
+      window.location.reload();
+    }
+    
+    // Show auth status on page load
+    window.onload = viewAuthStatus;
+  </script>
+</body>
+</html>

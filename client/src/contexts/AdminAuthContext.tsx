@@ -1,17 +1,22 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface AdminUser {
+  id?: number;
   name: string;
   email: string;
-  role: string;
+  role: 'super_admin' | 'admin' | 'teacher' | 'staff';
 }
 
 interface AdminAuthContextType {
   isAuthenticated: boolean;
   adminUser: AdminUser | null;
   loading: boolean;
+  token: string | null;
   login: (token: string, user: AdminUser) => void;
   logout: () => void;
+  isSuperAdmin: () => boolean;
+  isRegularAdmin: () => boolean;
+  canManageUsers: () => boolean;
 }
 
 // Create context
@@ -21,20 +26,22 @@ const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefin
 export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   // Check if user is authenticated on initial load
   useEffect(() => {
     const checkAuth = () => {
       try {
-        const token = localStorage.getItem('adminToken');
+        const storedToken = localStorage.getItem('adminToken');
         const userData = localStorage.getItem('adminUser');
         
-        if (token && userData) {
+        if (storedToken && userData) {
           const user = JSON.parse(userData) as AdminUser;
           
-          // Verify user has admin role
-          if (user.role === 'admin') {
+          // Verify user has a valid role
+          if (['super_admin', 'admin', 'teacher', 'staff'].includes(user.role)) {
+            setToken(storedToken);
             setAdminUser(user);
             setIsAuthenticated(true);
           } else {
@@ -56,23 +63,73 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, []);
 
   // Login
-  const login = (token: string, user: AdminUser) => {
-    localStorage.setItem('adminToken', token);
-    localStorage.setItem('adminUser', JSON.stringify(user));
-    setAdminUser(user);
-    setIsAuthenticated(true);
+  const login = (newToken: string, user: AdminUser) => {
+    try {
+      // Store authentication data in localStorage
+      localStorage.setItem('adminToken', newToken);
+      localStorage.setItem('adminUser', JSON.stringify(user));
+      
+      // Update state
+      setToken(newToken);
+      setAdminUser(user);
+      setIsAuthenticated(true);
+      
+      console.log('Login successful, authentication state updated', { user });
+    } catch (error) {
+      console.error('Error during login process:', error);
+    }
   };
 
   // Logout
-  const logout = () => {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminUser');
-    setAdminUser(null);
-    setIsAuthenticated(false);
+  const logout = async () => {
+    try {
+      // Call the logout endpoint if we have a token
+      if (token) {
+        await fetch('http://localhost:5000/api/admin/logout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear local storage and state regardless of API success
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminUser');
+      setToken(null);
+      setAdminUser(null);
+      setIsAuthenticated(false);
+    }
+  };
+  
+  // Helper functions to check user roles and permissions
+  const isSuperAdmin = () => {
+    return adminUser?.role === 'super_admin';
+  };
+  
+  const isRegularAdmin = () => {
+    return adminUser?.role === 'admin';
+  };
+  
+  const canManageUsers = () => {
+    return adminUser?.role === 'super_admin' || adminUser?.role === 'admin';
   };
 
   return (
-    <AdminAuthContext.Provider value={{ isAuthenticated, adminUser, loading, login, logout }}>
+    <AdminAuthContext.Provider value={{ 
+      isAuthenticated, 
+      adminUser, 
+      loading, 
+      token,
+      login, 
+      logout,
+      isSuperAdmin,
+      isRegularAdmin,
+      canManageUsers
+    }}>
       {children}
     </AdminAuthContext.Provider>
   );
@@ -91,16 +148,27 @@ export const useAdminAuth = () => {
 export const withAdminAuth = <P extends object>(Component: React.ComponentType<P>): React.FC<P> => {
   const ProtectedRoute: React.FC<P> = (props) => {
     const { isAuthenticated, loading } = useAdminAuth();
+    const [redirecting, setRedirecting] = useState(false);
     
     useEffect(() => {
       // If not loading and not authenticated, redirect
       if (!loading && !isAuthenticated) {
-        window.location.href = '/admin/login';
+        console.log('User not authenticated, redirecting to login...');
+        setRedirecting(true);
+        // Add small delay to prevent immediate redirection that might interfere with auth process
+        setTimeout(() => {
+          const baseUrl = window.location.origin;
+          window.location.href = `${baseUrl}/admin/login`;
+          console.log(`Redirecting to login: ${baseUrl}/admin/login`);
+        }, 200);
+      } else if (!loading && isAuthenticated) {
+        // Log when authenticated to help with debugging
+        console.log('User is authenticated, rendering protected component');
       }
     }, [loading, isAuthenticated]);
     
     // Show loading or render protected component
-    if (loading) {
+    if (loading || redirecting) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-[#83C5BE]">
           <div className="text-white text-xl">Loading...</div>

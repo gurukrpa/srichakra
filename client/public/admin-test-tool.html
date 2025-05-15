@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Srichakra Admin Tester</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f0f8fa;
+      color: #333;
+    }
+    
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+      gap: 15px;
+    }
+    
+    .header img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+    }
+    
+    h1, h2 {
+      color: #006D77;
+      margin-top: 0;
+    }
+    
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background-color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .tab {
+      padding: 10px 15px;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+    
+    .tab.active {
+      border-bottom: 3px solid #006D77;
+      font-weight: bold;
+      color: #006D77;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    
+    input[type="email"], 
+    input[type="password"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    
+    button {
+      background-color: #006D77;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s;
+    }
+    
+    button:hover {
+      background-color: #005964;
+    }
+    
+    button.secondary {
+      background-color: #83C5BE;
+    }
+    
+    button.secondary:hover {
+      background-color: #6db5ae;
+    }
+    
+    button.danger {
+      background-color: #e63946;
+    }
+    
+    button.danger:hover {
+      background-color: #d62b39;
+    }
+    
+    pre {
+      background-color: #eee;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    
+    .success {
+      color: green;
+    }
+    
+    .error {
+      color: red;
+    }
+    
+    .auth-status {
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    
+    .auth-status.logged-in {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .auth-status.logged-out {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="/favicon.svg" alt="Srichakra Logo">
+    <h1>Srichakra Admin System Tester</h1>
+  </div>
+  
+  <div class="auth-status" id="authStatus">
+    Checking authentication status...
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="login">Login Test</div>
+    <div class="tab" data-tab="api">API Test</div>
+    <div class="tab" data-tab="navigation">Navigation Test</div>
+    <div class="tab" data-tab="debug">Debug Tools</div>
+  </div>
+  
+  <div id="loginTab" class="tab-content active">
+    <div class="card">
+      <h2>Admin Login Tester</h2>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <input type="email" id="email" value="admin@srichakra.com" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input type="password" id="password" value="admin123" required>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="rememberMe"> Remember me
+          </label>
+        </div>
+        <button type="submit">Login</button>
+        <button type="button" class="secondary" id="demoCredentials">Use Demo Credentials</button>
+      </form>
+      <div class="form-group">
+        <label>Response:</label>
+        <pre id="loginResponse"></pre>
+      </div>
+    </div>
+  </div>
+  
+  <div id="apiTab" class="tab-content">
+    <div class="card">
+      <h2>API Connection Test</h2>
+      <button id="testLoginStatus">Test Login Status API</button>
+      <button id="testOnlineUsers">Test Online Users API</button>
+      <button id="testProtectedApi">Test Protected Endpoint</button>
+      <div class="form-group">
+        <label>Response:</label>
+        <pre id="apiResponse"></pre>
+      </div>
+    </div>
+  </div>
+  
+  <div id="navigationTab" class="tab-content">
+    <div class="card">
+      <h2>Navigation Links</h2>
+      <p>Use these links to test navigation between admin pages:</p>
+      <button class="nav-button" data-path="/admin/login">Admin Login</button>
+      <button class="nav-button" data-path="/admin/dashboard">Admin Dashboard</button>
+      <button class="nav-button" data-path="/admin/team-members">Team Members</button>
+      <button class="nav-button" data-path="/admin/settings">Settings</button>
+      <button class="nav-button" data-path="/">Back to Homepage</button>
+    </div>
+    
+    <div class="card">
+      <h2>Redirection Test</h2>
+      <p>Test specific redirects with parameters:</p>
+      <button class="nav-button" data-path="/admin/login?redirect=team-members">Login → Team Members</button>
+      <button class="nav-button" data-path="/admin/login?redirect=settings">Login → Settings</button>
+    </div>
+  </div>
+  
+  <div id="debugTab" class="tab-content">
+    <div class="card">
+      <h2>Auth Debug Tools</h2>
+      <button id="viewStorage">View localStorage</button>
+      <button id="clearAuth" class="danger">Clear Auth Data</button>
+      <button id="refreshPage">Refresh Page</button>
+      <div class="form-group">
+        <label>Storage Contents:</label>
+        <pre id="storageContents"></pre>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Global variables
+    const API_BASE_URL = 'http://localhost:5000/api';
+    let currentToken = localStorage.getItem('adminToken');
+    
+    // DOM Elements
+    const authStatusElem = document.getElementById('authStatus');
+    const loginForm = document.getElementById('loginForm');
+    const loginResponseElem = document.getElementById('loginResponse');
+    const apiResponseElem = document.getElementById('apiResponse');
+    const storageContentsElem = document.getElementById('storageContents');
+    const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    // Tab functionality
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Hide all tab contents and deactivate all tabs
+        tabContents.forEach(content => content.classList.remove('active'));
+        tabs.forEach(t => t.classList.remove('active'));
+        
+        // Activate clicked tab and its content
+        tab.classList.add('active');
+        const tabId = tab.getAttribute('data-tab');
+        document.getElementById(`${tabId}Tab`).classList.add('active');
+      });
+    });
+    
+    // Form submission handler
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const rememberMe = document.getElementById('rememberMe').checked;
+      
+      loginResponseElem.textContent = 'Logging in...';
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/admin/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        });
+        
+        const data = await response.json();
+        loginResponseElem.textContent = JSON.stringify(data, null, 2);
+        
+        if (data.success) {
+          // Store authentication data
+          localStorage.setItem('adminToken', data.token);
+          localStorage.setItem('adminUser', JSON.stringify(data.user));
+          
+          if (rememberMe) {
+            localStorage.setItem('adminEmail', email);
+          } else {
+            localStorage.removeItem('adminEmail');
+          }
+          
+          currentToken = data.token;
+          checkAuthStatus();
+        }
+      } catch (error) {
+        loginResponseElem.textContent = `Error: ${error.message}`;
+      }
+    });
+    
+    // Check authentication status
+    function checkAuthStatus() {
+      const token = localStorage.getItem('adminToken');
+      const userData = localStorage.getItem('adminUser');
+      
+      if (token && userData) {
+        try {
+          const user = JSON.parse(userData);
+          authStatusElem.innerHTML = `<strong>Logged in as:</strong> ${user.name} (${user.email}) - Role: ${user.role}`;
+          authStatusElem.className = 'auth-status logged-in';
+        } catch (e) {
+          authStatusElem.textContent = 'Authentication data invalid. Please log in again.';
+          authStatusElem.className = 'auth-status logged-out';
+        }
+      } else {
+        authStatusElem.textContent = 'Not logged in. Please log in to access admin features.';
+        authStatusElem.className = 'auth-status logged-out';
+      }
+    }
+    
+    // Event Listeners
+    document.getElementById('demoCredentials').addEventListener('click', () => {
+      document.getElementById('email').value = 'admin@srichakra.com';
+      document.getElementById('password').value = 'admin123';
+    });
+    
+    document.getElementById('testLoginStatus').addEventListener('click', async () => {
+      apiResponseElem.textContent = 'Testing login status...';
+      try {
+        const response = await fetch(`${API_BASE_URL}/admin/login-status`);
+        const data = await response.json();
+        apiResponseElem.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        apiResponseElem.textContent = `Error: ${error.message}`;
+      }
+    });
+    
+    document.getElementById('testOnlineUsers').addEventListener('click', async () => {
+      apiResponseElem.textContent = 'Fetching online users...';
+      try {
+        if (!currentToken) {
+          apiResponseElem.textContent = 'Not logged in. Please login first.';
+          return;
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/admin/online-users`, {
+          headers: {
+            'Authorization': `Bearer ${currentToken}`
+          }
+        });
+        const data = await response.json();
+        apiResponseElem.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        apiResponseElem.textContent = `Error: ${error.message}`;
+      }
+    });
+    
+    document.getElementById('testProtectedApi').addEventListener('click', async () => {
+      apiResponseElem.textContent = 'Testing protected API...';
+      try {
+        if (!currentToken) {
+          apiResponseElem.textContent = 'Not logged in. Please login first.';
+          return;
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/admin/profile`, {
+          headers: {
+            'Authorization': `Bearer ${currentToken}`
+          }
+        });
+        const data = await response.json();
+        apiResponseElem.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        apiResponseElem.textContent = `Error: ${error.message}`;
+      }
+    });
+    
+    // Navigation buttons
+    document.querySelectorAll('.nav-button').forEach(button => {
+      button.addEventListener('click', () => {
+        const path = button.getAttribute('data-path');
+        window.location.href = path;
+      });
+    });
+    
+    document.getElementById('viewStorage').addEventListener('click', () => {
+      const items = {
+        adminToken: localStorage.getItem('adminToken'),
+        adminUser: localStorage.getItem('adminUser'),
+        adminEmail: localStorage.getItem('adminEmail')
+      };
+      
+      storageContentsElem.textContent = JSON.stringify(items, null, 2);
+    });
+    
+    document.getElementById('clearAuth').addEventListener('click', () => {
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminUser');
+      localStorage.removeItem('adminEmail');
+      storageContentsElem.textContent = 'Auth data cleared';
+      checkAuthStatus();
+    });
+    
+    document.getElementById('refreshPage').addEventListener('click', () => {
+      location.reload();
+    });
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAuthStatus();
+      
+      // Check for saved email
+      const savedEmail = localStorage.getItem('adminEmail');
+      if (savedEmail) {
+        document.getElementById('email').value = savedEmail;
+        document.getElementById('rememberMe').checked = true;
+      }
+    });
+  </script>
+</body>
+</html>

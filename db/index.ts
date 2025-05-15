@@ -6,10 +6,13 @@ import * as schema from "@shared/schema";
 // This is the correct way neon config - DO NOT change this
 neonConfig.webSocketConstructor = ws;
 
+// Set a default DATABASE_URL for development if not provided
 if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
+  console.warn(
+    "WARNING: DATABASE_URL is not set. Using a mock connection for development."
   );
+  // Using a fake connection string for development
+  process.env.DATABASE_URL = "postgres://user:password@localhost:5432/srichakra_dev";
 }
 
 export const pool = new Pool({ connectionString: process.env.DATABASE_URL });

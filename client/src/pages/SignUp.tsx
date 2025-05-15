@@ -96,23 +96,20 @@ const SignUp = () => {
     }
   };
 
-  const handleSignUp = (provider: string) => {
-    console.log(`Sign up with ${provider}`);
-    // Add your sign-up logic here
-  };
+  // Removed social sign-up providers
 
   return (
     <div className="min-h-screen bg-[#83C5BE] flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
-        <div className="flex flex-col items-center mb-6">
-          <div className="h-16 w-16 mb-2">
+      <div className="w-full max-w-4xl bg-white rounded-lg shadow-lg p-6">
+        <div className="flex flex-col items-center mb-4">
+          <div className="h-14 w-14 mb-1">
             <img 
               src={sriYantraLogo} 
               alt="Sri Yantra Symbol" 
               className="h-full w-full object-cover rounded-full"
             />
           </div>
-          <SrichakraText size="3xl" color="text-[#800000]" decorative={true} withBorder={true}>
+          <SrichakraText size="2xl" color="text-[#800000]" decorative={true} withBorder={true}>
             Srichakra
           </SrichakraText>
           <p className="text-gray-600 text-sm mt-1">Create your account</p>
@@ -125,21 +122,14 @@ const SignUp = () => {
         )}
         
         <form onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-3">
+              {/* Account Details Section Title */}
+              <h3 className="font-medium text-gray-700 mb-2 border-b">Account Details</h3>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+            <div>
+              <Label htmlFor="email" className="text-sm">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -147,11 +137,25 @@ const SignUp = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="h-9"
               />
             </div>
+            <div>
+              <Label htmlFor="name" className="text-sm">Full Name</Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="John Doe"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="h-9"
+              />
+            </div>
+            <div></div>
             
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+            <div>
+              <Label htmlFor="password" className="text-sm">Password</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -160,6 +164,7 @@ const SignUp = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  className="h-9"
                 />
                 <button
                   type="button"
@@ -167,14 +172,13 @@ const SignUp = () => {
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
-              <p className="text-xs text-gray-500">Password must be at least 8 characters long</p>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <div>
+              <Label htmlFor="confirmPassword" className="text-sm">Confirm Password</Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
@@ -183,6 +187,7 @@ const SignUp = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
+                  className="h-9"
                 />
                 <button
                   type="button"
@@ -190,60 +195,63 @@ const SignUp = () => {
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                 >
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
             
-            {/* New input fields */}
-            <div className="space-y-2">
-              <Label htmlFor="studentName">Student's Name</Label>
-              <Input id="studentName" type="text" value={studentName} onChange={(e) => setStudentName(e.target.value)} required />
+            <div className="md:col-span-3 mt-2">
+              {/* Student Information Section Title */}
+              <h3 className="font-medium text-gray-700 mb-2 border-b">Student Information</h3>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="parentName">Parent's Name</Label>
-              <Input id="parentName" type="text" value={parentName} onChange={(e) => setParentName(e.target.value)} required />
+            <div>
+              <Label htmlFor="parentName" className="text-sm">Parent's Name</Label>
+              <Input id="parentName" type="text" value={parentName} onChange={(e) => setParentName(e.target.value)} required className="h-9" />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="occupation">Parent's Occupation</Label>
-              <Input id="occupation" type="text" value={occupation} onChange={(e) => setOccupation(e.target.value)} />
+            <div>
+              <Label htmlFor="occupation" className="text-sm">Parent's Occupation</Label>
+              <Input id="occupation" type="text" value={occupation} onChange={(e) => setOccupation(e.target.value)} className="h-9" />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="schoolName">School Name</Label>
-              <Input id="schoolName" type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)} />
+            <div>
+              <Label htmlFor="schoolName" className="text-sm">School Name</Label>
+              <Input id="schoolName" type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)} className="h-9" />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="age">Student's Age</Label>
-              <Input id="age" type="number" value={age} onChange={(e) => setAge(e.target.value)} />
+            <div>
+              <Label htmlFor="age" className="text-sm">Student's Age</Label>
+              <Input id="age" type="number" value={age} onChange={(e) => setAge(e.target.value)} className="h-9" />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="city">City</Label>
-              <Input id="city" type="text" value={city} onChange={(e) => setCity(e.target.value)} />
+            <div>
+              <Label htmlFor="city" className="text-sm">City</Label>
+              <Input id="city" type="text" value={city} onChange={(e) => setCity(e.target.value)} className="h-9" />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="country">Country</Label>
-              <Input id="country" type="text" value={country} onChange={(e) => setCountry(e.target.value)} />
+            <div className="md:col-span-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="country" className="text-sm">Country</Label>
+                  <Input id="country" type="text" value={country} onChange={(e) => setCountry(e.target.value)} className="h-9" />
+                </div>
+                
+                <div className="md:col-span-2">
+                  <Label htmlFor="notes" className="text-sm">What are you looking for?</Label>
+                  <textarea
+                    id="notes"
+                    className="w-full border border-gray-300 rounded px-3 py-2 h-9"
+                    rows={1}
+                    placeholder="Tell us why you're signing up"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="notes">What are you looking for?</Label>
-              <textarea
-                id="notes"
-                className="w-full border border-gray-300 rounded px-3 py-2"
-                rows={3}
-                placeholder="Tell us why you're signing up (e.g., career guidance, overseas admission...)"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
-            </div>
-            
-            <div className="flex items-center space-x-2">
+            <div className="md:col-span-2 flex items-center">
               <Checkbox 
                 id="terms" 
                 checked={agreeTerms}
@@ -252,55 +260,25 @@ const SignUp = () => {
               />
               <label
                 htmlFor="terms"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="text-sm ml-2 font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
                 I agree to the <Link href="/terms" className="text-[#006D77] hover:underline">terms and conditions</Link>
               </label>
             </div>
             
-            <Button 
-              type="submit" 
-              className="w-full bg-[#006D77] hover:bg-[#005964]"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Creating account...' : 'Create account'}
-            </Button>
+            <div>
+              <Button 
+                type="submit" 
+                className="w-full bg-[#006D77] hover:bg-[#005964]"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Creating...' : 'Create account'}
+              </Button>
+            </div>
           </div>
         </form>
         
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or sign up with</span>
-            </div>
-          </div>
-          
-          <div className="mt-6 grid grid-cols-3 gap-3">
-            <button
-              onClick={() => handleSignUp('Google')}
-              className="w-full bg-red-500 text-white py-2 rounded hover:bg-red-600 flex items-center justify-center"
-            >
-              Google
-            </button>
-            <button
-              onClick={() => handleSignUp('Microsoft')}
-              className="w-full bg-blue-700 text-white py-2 rounded hover:bg-blue-800 flex items-center justify-center"
-            >
-              Microsoft
-            </button>
-            <button
-              onClick={() => handleSignUp('Apple')}
-              className="w-full bg-black text-white py-2 rounded hover:bg-gray-800 flex items-center justify-center"
-            >
-              Apple
-            </button>
-          </div>
-        </div>
-        
-        <div className="mt-6 text-center">
+        <div className="mt-4 text-center">
           <p className="text-sm text-gray-600">
             Already have an account?{' '}
             <Link href="/login" className="text-[#006D77] hover:underline">

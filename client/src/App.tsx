@@ -15,10 +15,15 @@ import About from "@/pages/About";
 import Contact from "@/pages/Contact";
 import AdminLogin from "@/pages/admin/AdminLogin";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
+import TeamMembers from "@/pages/admin/TeamMembers";
+import Settings from "@/pages/admin/Settings";
+import AdminRedirect from "@/pages/admin/AdminRedirect";
 import { AdminAuthProvider, withAdminAuth } from "@/contexts/AdminAuthContext";
 
-// Wrap the admin dashboard with the auth protection HOC
+// Wrap admin components with the auth protection HOC
 const ProtectedAdminDashboard = withAdminAuth(AdminDashboard);
+const ProtectedTeamMembers = withAdminAuth(TeamMembers);
+const ProtectedSettings = withAdminAuth(Settings);
 
 export default function App() {
   return (
@@ -40,7 +45,13 @@ export default function App() {
               
               {/* Admin routes */}
               <Route path="/admin/login" component={AdminLogin} />
+              <Route path="/admin/redirect" component={AdminRedirect} />
+              <Route path="/admin/team-members" component={ProtectedTeamMembers} />
+              <Route path="/admin/settings" component={ProtectedSettings} />
+              {/* Make sure dashboard routes are clear and well-defined */}
               <Route path="/admin/dashboard" component={ProtectedAdminDashboard} />
+              {/* Catch-all for /admin base path - should be last in the admin routes section */}
+              <Route path="/admin" component={ProtectedAdminDashboard} />
               
               {/* 404 page */}
               <Route component={NotFound} />
