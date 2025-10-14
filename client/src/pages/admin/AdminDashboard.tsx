@@ -7,6 +7,7 @@ import {
 import SrichakraText from '@/components/custom/SrichakraText';
 import { Button } from '@/components/ui/button';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import { ADMIN_API } from '@/config/api';
 import sriYantraLogo from '../../assets/images/logo/sri-yantra.png';
 
 const AdminDashboard = () => {
@@ -25,7 +26,7 @@ const AdminDashboard = () => {
         }
         
         console.log('Fetching online users...');
-        const response = await fetch('http://localhost:5000/api/admin/online-users', {
+        const response = await fetch(ADMIN_API.onlineUsers, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

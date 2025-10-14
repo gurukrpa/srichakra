@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { isDevBypassEnabled } from '@/config/featureFlags';
+import { ADMIN_API } from '@/config/api';
 
 interface AdminUser {
   id?: number;
@@ -33,6 +35,21 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
   useEffect(() => {
     const checkAuth = () => {
       try {
+        // In development, auto-login with a mock admin user
+        if (isDevBypassEnabled()) {
+          const devUser: AdminUser = {
+            id: 1,
+            name: 'Dev Admin',
+            email: 'dev-admin@example.com',
+            role: 'super_admin'
+          };
+          setToken('dev-admin-token');
+          setAdminUser(devUser);
+          setIsAuthenticated(true);
+          setLoading(false);
+          return;
+        }
+
         const storedToken = localStorage.getItem('adminToken');
         const userData = localStorage.getItem('adminUser');
         
@@ -85,7 +102,7 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
     try {
       // Call the logout endpoint if we have a token
       if (token) {
-        await fetch('http://localhost:5000/api/admin/logout', {
+        await fetch(ADMIN_API.logout, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -151,6 +168,10 @@ export const withAdminAuth = <P extends object>(Component: React.ComponentType<P
     const [redirecting, setRedirecting] = useState(false);
     
     useEffect(() => {
+      if (isDevBypassEnabled()) {
+        // Bypass protection in development
+        return;
+      }
       // If not loading and not authenticated, redirect
       if (!loading && !isAuthenticated) {
         console.log('User not authenticated, redirecting to login...');
@@ -168,7 +189,7 @@ export const withAdminAuth = <P extends object>(Component: React.ComponentType<P
     }, [loading, isAuthenticated]);
     
     // Show loading or render protected component
-    if (loading || redirecting) {
+    if ((loading && !isDevBypassEnabled()) || redirecting) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-[#83C5BE]">
           <div className="text-white text-xl">Loading...</div>
@@ -176,7 +197,7 @@ export const withAdminAuth = <P extends object>(Component: React.ComponentType<P
       );
     }
     
-    return isAuthenticated ? <Component {...props} /> : null;
+    return (isAuthenticated || isDevBypassEnabled()) ? <Component {...props} /> : null;
   };
   
   return ProtectedRoute;

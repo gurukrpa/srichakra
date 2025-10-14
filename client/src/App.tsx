@@ -13,12 +13,15 @@ import SignUp from "@/pages/SignUp";
 import Career from "@/pages/Career";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
+import CareerAssessment from "@/pages/CareerAssessment";
 import AdminLogin from "@/pages/admin/AdminLogin";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import TeamMembers from "@/pages/admin/TeamMembers";
 import Settings from "@/pages/admin/Settings";
 import AdminRedirect from "@/pages/admin/AdminRedirect";
 import { AdminAuthProvider, withAdminAuth } from "@/contexts/AdminAuthContext";
+import DevAuthBypass from "@/pages/DevAuthBypass";
+import { isDevBypassEnabled } from "@/config/featureFlags";
 
 // Wrap admin components with the auth protection HOC
 const ProtectedAdminDashboard = withAdminAuth(AdminDashboard);
@@ -37,9 +40,19 @@ export default function App() {
               <Route path="/code-editor" component={CodeEditor} />
               <Route path="/srichakra-demo" component={SrichakraDemo} />
               <Route path="/srichakra-showcase" component={SrichakraShowcase} />
-              <Route path="/login" component={Login} />
-              <Route path="/signup" component={SignUp} />
+              {isDevBypassEnabled() ? (
+                <>
+                  <Route path="/login" component={DevAuthBypass} />
+                  <Route path="/signup" component={DevAuthBypass} />
+                </>
+              ) : (
+                <>
+                  <Route path="/login" component={Login} />
+                  <Route path="/signup" component={SignUp} />
+                </>
+              )}
               <Route path="/career" component={Career} />
+              <Route path="/career-assessment" component={CareerAssessment} />
               <Route path="/about" component={About} />
               <Route path="/contact" component={Contact} />
               

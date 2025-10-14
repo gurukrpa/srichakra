@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import SrichakraText from '@/components/custom/SrichakraText';
 // Import Accordion components
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
-// Import the Sri Yantra image
+import { isDevBypassEnabled } from '@/config/featureFlags';
+// Import the Sri Yantra logo
 import sriYantraLogo from '../assets/images/logo/sri-yantra.png';
 // Import children images for slideshow
 import child1 from '../assets/images/slideshow/child1.jpg';
@@ -16,7 +17,7 @@ import brain from '../assets/images/slideshow/brain.png';
 import careerImage from '../assets/images/slideshow/career.png';
 import bridgeImage from '../assets/images/slideshow/bridge.jpg';
 import dmitWonder from '../assets/images/slideshow/dmit-wonder.png'; // This is the old one
-import iquery from '../assets/images/slideshow/iquery.jpeg';
+import careerAssessment from '../assets/images/slideshow/career-assessment.png'; // Career Assessment Test image
 import fingerprintDmit from '../assets/images/slideshow/DMIT.png'; // Import from the assets directory
 
 const SrichakraHome = () => {
@@ -25,7 +26,7 @@ const SrichakraHome = () => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [user, setUser] = useState<any>(null);
   const slideshowRef = useRef<HTMLDivElement>(null);
-  const slidesCount = 7; // Updated to include iQuery image
+  const slidesCount = 6; // Updated after removing iQuery image
   
   // For tracking if we need to reset
   const lastSlideRef = useRef(false);
@@ -34,6 +35,8 @@ const SrichakraHome = () => {
   // Add state to track which accordion is open
   const [openAccordion, setOpenAccordion] = useState<string | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
+  const devBypass = isDevBypassEnabled();
+  const hasAccess = devBypass || !!user;
 
   // Check for user data in localStorage on component mount
   useEffect(() => {
@@ -151,7 +154,6 @@ const SrichakraHome = () => {
     child3, 
     child4,
     brain,
-    iquery, // jQuery image added
     dmitWonder,  // DMIT Wonder logo added as the last slide
     child1  // First slide duplicated at the end
   ];
@@ -170,20 +172,22 @@ const SrichakraHome = () => {
       {/* Header with logo and buttons - updated background color */}
       <header className="bg-[#006D77] text-white p-4">
         <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            {/* Sri Yantra Symbol Image */}
-            <div className="h-16 w-16 flex-shrink-0">
+          <div className="flex items-center">
+            {/* Sri Yantra Logo */}
+            <div className="h-16 w-16 mr-3">
               <img 
                 src={sriYantraLogo} 
                 alt="Sri Yantra Symbol" 
                 className="h-full w-full object-cover rounded-full"
               />
             </div>
-            
-            {/* Srichakra Text */}
-            <div className="flex flex-col">
-              <SrichakraText size="5xl" color="text-[#800000]" decorative={true} withBorder={true}>Srichakra</SrichakraText>
-              <div className="text-xl">The School To identify Your Child's Divine Gift!!</div>
+            <div>
+              <SrichakraText size="3xl" color="text-white" decorative={true}>
+                Srichakra
+              </SrichakraText>
+              <p className="text-sm text-gray-200 -mt-1">
+                The School To identify Your Child's Divine Gift!!
+              </p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -202,18 +206,21 @@ const SrichakraHome = () => {
                 </Button>
               </div>
             ) : (
-              <>
-                <Link href="/login">
-                  <Button variant="outline" className="text-white border-white hover:bg-[#005964]">
-                    Login
-                  </Button>
-                </Link>
-                <Link href="/signup">
-                  <Button className="bg-white text-[#006D77] hover:bg-gray-100">
-                    Sign Up
-                  </Button>
-                </Link>
-              </>
+              // Hide login/signup buttons when dev bypass is enabled
+              devBypass ? null : (
+                <>
+                  <Link href="/login">
+                    <Button variant="outline" className="text-white border-white hover:bg-[#005964]">
+                      Login
+                    </Button>
+                  </Link>
+                  <Link href="/signup">
+                    <Button className="bg-white text-[#006D77] hover:bg-gray-100">
+                      Sign Up
+                    </Button>
+                  </Link>
+                </>
+              )
             )}
           </div>
         </div>
@@ -228,7 +235,7 @@ const SrichakraHome = () => {
                 type="single" 
                 collapsible 
                 className="w-full"
-                value={openAccordion}
+                value={openAccordion ?? undefined}
                 onValueChange={setOpenAccordion}
               >
                 <AccordionItem value="dmit" className="border-none">
@@ -252,7 +259,7 @@ const SrichakraHome = () => {
                 type="single" 
                 collapsible 
                 className="w-full"
-                value={openAccordion}
+                value={openAccordion ?? undefined}
                 onValueChange={setOpenAccordion}
               >
                 <AccordionItem value="career" className="border-none">
@@ -276,7 +283,7 @@ const SrichakraHome = () => {
                 type="single" 
                 collapsible 
                 className="w-full"
-                value={openAccordion}
+                value={openAccordion ?? undefined}
                 onValueChange={setOpenAccordion}
               >
                 <AccordionItem value="overseas" className="border-none">
@@ -300,7 +307,7 @@ const SrichakraHome = () => {
                 type="single" 
                 collapsible 
                 className="w-full"
-                value={openAccordion}
+                value={openAccordion ?? undefined}
                 onValueChange={setOpenAccordion}
               >
                 <AccordionItem value="bridging" className="border-none">
@@ -359,10 +366,12 @@ const SrichakraHome = () => {
           
           {/* Slide indicators */}
           <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-10 flex space-x-2">
-            {[0, 1, 2, 3, 4, 5, 6].map((index) => (
+            {[0, 1, 2, 3, 4, 5].map((index) => (
               <button 
                 key={index} 
                 onClick={() => setCurrentSlide(index)}
+                aria-label={`Go to slide ${index + 1}`}
+                title={`Slide ${index + 1}`}
                 className={`w-2 h-2 rounded-full ${currentSlide === index ? 'bg-white' : 'bg-white/50'}`}
               />
             ))}
@@ -414,9 +423,9 @@ const SrichakraHome = () => {
               <div className="p-3">  
                 <h3 className="text-lg font-semibold mb-1 text-[#006D77]">DMIT</h3>  
                 <p className="text-gray-600 mb-3 text-sm">Discover your child's inborn talents through fingerprint analysis.</p>  
-                <Link href={user ? "/dmit" : "/login"}>
+        <Link href={hasAccess ? "/dmit" : "/login"}>
                   <Button className="w-full bg-[#006D77] hover:bg-[#005964]">
-                    {user ? "Learn More" : "Login to Access"}
+          {hasAccess ? "Learn More" : "Login to Access"}
                   </Button>
                 </Link>
               </div>
@@ -434,9 +443,29 @@ const SrichakraHome = () => {
               <div className="p-3">  
                 <h3 className="text-lg font-semibold mb-1 text-[#006D77]">Career Counseling</h3>  
                 <p className="text-gray-600 mb-3 text-sm">Get expert guidance for making informed career decisions.</p>  
-                <Link href={user ? "/career" : "/login"}>
+        <Link href={hasAccess ? "/career" : "/login"}>
                   <Button className="w-full bg-[#006D77] hover:bg-[#005964]">
-                    {user ? "Learn More" : "Login to Access"}
+          {hasAccess ? "Learn More" : "Login to Access"}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Career Assessment Test Card - Made narrower */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-105 max-w-[220px] w-full mx-auto">
+              <div className="h-40 overflow-hidden">  
+                <img 
+                  src={careerAssessment} 
+                  alt="Career Assessment Test" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-3">  
+                <h3 className="text-lg font-semibold mb-1 text-[#006D77]">Career Assessment</h3>  
+                <p className="text-gray-600 mb-3 text-sm">Discover your ideal career path with comprehensive assessment.</p>  
+        <Link href={hasAccess ? "/career-assessment" : "/login"}>
+                  <Button className="w-full bg-[#006D77] hover:bg-[#005964]">
+          {hasAccess ? "Take Test" : "Login to Access"}
                   </Button>
                 </Link>
               </div>
@@ -446,7 +475,7 @@ const SrichakraHome = () => {
             <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-105 max-w-[220px] w-full mx-auto">
               <div className="h-40 overflow-hidden">  
                 <img 
-                  src={iquery} 
+                  src={bridgeImage} 
                   alt="Overseas Admission" 
                   className="w-full h-full object-cover"
                 />
@@ -454,29 +483,9 @@ const SrichakraHome = () => {
               <div className="p-3">  
                 <h3 className="text-lg font-semibold mb-1 text-[#006D77]">Overseas Admission</h3>  
                 <p className="text-gray-600 mb-3 text-sm">Explore global education opportunities with our assistance.</p>  
-                <Link href={user ? "/overseas" : "/login"}>
+        <Link href={hasAccess ? "/overseas" : "/login"}>
                   <Button className="w-full bg-[#006D77] hover:bg-[#005964]">
-                    {user ? "Learn More" : "Login to Access"}
-                  </Button>
-                </Link>
-              </div>
-            </div>
-
-            {/* Bridging Courses Card - Made narrower */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-105 max-w-[220px] w-full mx-auto">
-              <div className="h-40 overflow-hidden">  
-                <img 
-                  src={bridgeImage} 
-                  alt="Bridging Courses" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="p-3">  
-                <h3 className="text-lg font-semibold mb-1 text-[#006D77]">Bridging Courses</h3>  
-                <p className="text-gray-600 mb-3 text-sm">Fill academic gaps with our specialized short-term programs.</p>  
-                <Link href={user ? "/bridging" : "/login"}>
-                  <Button className="w-full bg-[#006D77] hover:bg-[#005964]">
-                    {user ? "Learn More" : "Login to Access"}
+          {hasAccess ? "Learn More" : "Login to Access"}
                   </Button>
                 </Link>
               </div>

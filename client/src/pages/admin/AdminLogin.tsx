@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import sriYantraLogo from '../../assets/images/logo/sri-yantra.png';
 import SrichakraText from '@/components/custom/SrichakraText';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import { ADMIN_API } from '@/config/api';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -72,7 +73,7 @@ const AdminLogin = () => {
       // Check login system status first
       console.log('Checking login system status');
       try {
-        const statusCheck = await fetch('http://localhost:5000/api/admin/login-status');
+        const statusCheck = await fetch(ADMIN_API.loginStatus);
         const statusData = await statusCheck.json();
         console.log('Login system status:', statusData);
       } catch (error) {
@@ -81,7 +82,7 @@ const AdminLogin = () => {
       
       // Try with the correct API URL format - adjust this to match your backend API structure
       console.log('Making login request to server');
-      const response = await fetch('http://localhost:5000/api/admin/login', {
+      const response = await fetch(ADMIN_API.login, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
