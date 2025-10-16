@@ -1,7 +1,7 @@
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, School, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,6 +21,7 @@ const SignUp = () => {
   const [isLoading, setIsLoading] = useState(false);
   
   // New state hooks for additional fields
+  const [phone, setPhone] = useState('');
   const [studentName, setStudentName] = useState('');
   const [parentName, setParentName] = useState('');
   const [schoolName, setSchoolName] = useState('');
@@ -30,13 +31,71 @@ const SignUp = () => {
   const [country, setCountry] = useState('');
   const [notes, setNotes] = useState('');
   
+  // School/Public registration states
+  const [registrationType, setRegistrationType] = useState<'school' | 'public'>('public');
+  const [schoolEmail, setSchoolEmail] = useState('');
+  const [schoolId, setSchoolId] = useState('');
+  const [availableSchools, setAvailableSchools] = useState<any[]>([]);
+
+  // Load available schools
+  useEffect(() => {
+    const schools = JSON.parse(localStorage.getItem('schoolCredentials') || '[]');
+    setAvailableSchools(schools);
+  }, []);
+
+  // Generate school ID when school is selected
+  const generateSchoolId = (schoolEmail: string, studentName: string) => {
+    const school = availableSchools.find(s => s.email === schoolEmail);
+    if (!school) return '';
+    
+    // Get school code from email (abc@school.com -> ABC)
+    const schoolCode = schoolEmail.split('@')[0].toUpperCase().substring(0, 3);
+    
+    // Get existing students for this school to determine next number
+    const existingStudents = JSON.parse(localStorage.getItem('schoolStudents') || '[]');
+    const schoolStudents = existingStudents.filter((s: any) => s.schoolEmail === schoolEmail);
+    const nextNumber = (schoolStudents.length + 1).toString().padStart(3, '0');
+    
+    return `${schoolCode}${nextNumber}`;
+  };
+
+  // Auto-generate school ID when school email changes
+  useEffect(() => {
+    if (registrationType === 'school' && schoolEmail && studentName) {
+      const generatedId = generateSchoolId(schoolEmail, studentName);
+      setSchoolId(generatedId);
+    }
+  }, [schoolEmail, studentName, registrationType]);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     
     // Basic validation
-    if (!name || !email || !password || !confirmPassword) {
-      setError('Please fill in all fields');
+    if (!name || !email || !phone || !password || !confirmPassword || !studentName || !parentName) {
+      setError('Please fill in all required fields');
+      return;
+    }
+    
+    // School registration validation
+    if (registrationType === 'school') {
+      if (!schoolEmail || !schoolId) {
+        setError('Please select a school and ensure student ID is generated');
+        return;
+      }
+      
+      // Validate school ID doesn't already exist
+      const existingStudents = JSON.parse(localStorage.getItem('schoolStudents') || '[]');
+      if (existingStudents.some((s: any) => s.schoolId === schoolId)) {
+        setError('Student ID already exists. Please try again.');
+        return;
+      }
+    }
+    
+    // Phone validation
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    if (!phoneRegex.test(phone.replace(/\s+/g, ''))) {
+      setError('Please enter a valid phone number');
       return;
     }
     
@@ -72,9 +131,11 @@ const SignUp = () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Store user data in localStorage before redirecting
-      localStorage.setItem('user', JSON.stringify({ 
+      const userData = {
+        id: `user_${Date.now()}`,
         name,
         email, 
+        phone,
         password,
         studentName,
         parentName,
@@ -83,8 +144,39 @@ const SignUp = () => {
         occupation,
         city,
         country,
-        notes
-      }));
+        notes,
+        registrationDate: new Date().toISOString(),
+        lastLogin: null,
+        registrationType,
+        schoolEmail: registrationType === 'school' ? schoolEmail : null,
+        schoolId: registrationType === 'school' ? schoolId : null,
+        assessmentStatus: 'not_started',
+        assessmentData: null
+      };
+      
+      localStorage.setItem('user', JSON.stringify(userData));
+      
+      // Also save to a list of all registered users for admin dashboard
+      const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+      existingUsers.push(userData);
+      localStorage.setItem('registeredUsers', JSON.stringify(existingUsers));
+      
+      // If school registration, also store in school-specific storage
+      if (registrationType === 'school') {
+        const schoolStudents = JSON.parse(localStorage.getItem('schoolStudents') || '[]');
+        schoolStudents.push({
+          ...userData,
+          schoolEmail,
+          schoolId,
+          createdBy: 'public_signup'
+        });
+        localStorage.setItem('schoolStudents', JSON.stringify(schoolStudents));
+      }
+      
+      // Show success message with school ID if applicable
+      if (registrationType === 'school') {
+        alert(`Registration successful! Your School ID is: ${schoolId}\nPlease remember this ID for assessment access.`);
+      }
       
       // Successful signup would redirect to login or home
       window.location.href = '/login';
@@ -124,12 +216,41 @@ const SignUp = () => {
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-3">
+              {/* Registration Type Selection */}
+              <h3 className="font-medium text-gray-700 mb-3 border-b">Registration Type</h3>
+              <div className="flex gap-6 mb-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="registrationType"
+                    value="public"
+                    checked={registrationType === 'public'}
+                    onChange={(e) => setRegistrationType(e.target.value as 'public' | 'school')}
+                    className="w-4 h-4 text-blue-600"
+                  />
+                  <User className="w-4 h-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">Public Registration</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="registrationType"
+                    value="school"
+                    checked={registrationType === 'school'}
+                    onChange={(e) => setRegistrationType(e.target.value as 'public' | 'school')}
+                    className="w-4 h-4 text-blue-600"
+                  />
+                  <School className="w-4 h-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">From School</span>
+                </label>
+              </div>
+              
               {/* Account Details Section Title */}
               <h3 className="font-medium text-gray-700 mb-2 border-b">Account Details</h3>
             </div>
             
             <div>
-              <Label htmlFor="email" className="text-sm">Email</Label>
+              <Label htmlFor="email" className="text-sm">Personal Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -140,6 +261,43 @@ const SignUp = () => {
                 className="h-9"
               />
             </div>
+            
+            {/* School Email Field - Only for school registration */}
+            {registrationType === 'school' && (
+              <div>
+                <Label htmlFor="schoolEmail" className="text-sm">School Email *</Label>
+                <select
+                  id="schoolEmail"
+                  title="Select School Email"
+                  value={schoolEmail}
+                  onChange={(e) => setSchoolEmail(e.target.value)}
+                  required
+                  className="w-full h-9 px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select your school</option>
+                  {availableSchools.map((school) => (
+                    <option key={school.id} value={school.email}>
+                      {school.schoolName} ({school.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            
+            {/* School ID Field - Auto-generated for school registration */}
+            {registrationType === 'school' && schoolId && (
+              <div>
+                <Label htmlFor="schoolId" className="text-sm">School ID (Auto-generated)</Label>
+                <Input
+                  id="schoolId"
+                  type="text"
+                  value={schoolId}
+                  readOnly
+                  className="h-9 bg-gray-100 font-mono font-semibold text-blue-600"
+                  placeholder="Will be generated automatically"
+                />
+              </div>
+            )}
             <div>
               <Label htmlFor="name" className="text-sm">Full Name</Label>
               <Input
@@ -152,7 +310,18 @@ const SignUp = () => {
                 className="h-9"
               />
             </div>
-            <div></div>
+            <div>
+              <Label htmlFor="phone" className="text-sm">Phone Number</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="+1 (555) 123-4567"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                className="h-9"
+              />
+            </div>
             
             <div>
               <Label htmlFor="password" className="text-sm">Password</Label>

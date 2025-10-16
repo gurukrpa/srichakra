@@ -154,12 +154,6 @@ const AdminLogin = () => {
         console.error('Network error - server might be down or CORS issues');
         setError('Cannot connect to server. Please check your internet connection and try again.');
       }
-      
-      // Provide demo login credentials when in development
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('Development mode - adding demo credentials hint');
-        setError((prevError) => `${prevError}\n\nTry using: admin@srichakra.com / admin123`);
-      }
     } finally {
       setIsLoading(false);
     }

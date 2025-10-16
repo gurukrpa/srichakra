@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle, Clock, Users, Award, ArrowRight, Star } from 'lucide-react';
-import { getUserSession, isAuthenticated } from '@/lib/auth';
+import { getUserSession, isAuthenticated, trackUserActivity } from '@/lib/auth';
 import SrichakraText from '@/components/custom/SrichakraText';
 import sriYantraLogo from '../assets/images/logo/sri-yantra.png';
 
@@ -93,33 +93,24 @@ const CareerAssessmentPage = () => {
   ];
 
   useEffect(() => {
-    // TEMPORARY: Skip authentication for development
-    // TODO: Re-enable authentication when development is complete
+    // Authentication is required - but browser will save credentials for return visits
+    const userSession = getUserSession();
     
-    // Set a mock user for development
-    setUser({
-      email: 'dev@srichakra.com',
-      fullName: 'Development User'
-    });
-    
-    /* 
-    // UNCOMMENT THIS WHEN READY FOR PRODUCTION:
-    
-    // Check if user is authenticated with new system
-    if (!isAuthenticated()) {
-      // Redirect to login if not authenticated
-      window.location.href = '/login';
+    if (userSession) {
+      // User has a saved session - they can proceed
+      setUser({
+        email: userSession.email || 'user@srichakra.com',
+        fullName: userSession.name || userSession.email?.split('@')[0] || 'User'
+      });
+      // Track registered user activity
+      trackUserActivity('activity', userSession);
+    } else {
+      // No session found - redirect to login with return URL
+      // Browser will offer to save credentials during login
+      const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+      window.location.href = `/login?returnUrl=${returnUrl}`;
       return;
     }
-    
-    const userSession = getUserSession();
-    if (userSession) {
-      setUser({
-        email: userSession.email,
-        fullName: userSession.fullName || userSession.email.split('@')[0]
-      });
-    }
-    */
   }, []);
 
   const handleAnswer = (questionId: number, value: number) => {
@@ -164,7 +155,53 @@ const CareerAssessmentPage = () => {
     })).sort((a, b) => b.score - a.score);
 
     console.log('Assessment Results:', finalScores);
-    setReport({ finalScores, totalAnswered: Object.keys(answers).length });
+    const reportData = { finalScores, totalAnswered: Object.keys(answers).length };
+    setReport(reportData);
+    
+    // Save assessment results and update user status
+    saveAssessmentResults(reportData);
+  };
+
+  const saveAssessmentResults = (reportData: any) => {
+    if (!user) return;
+
+    const assessmentResult = {
+      userId: user.email,
+      studentName: user.name || user.email.split('@')[0],
+      completedAt: new Date().toISOString(),
+      results: reportData,
+      answers: answers,
+      assessmentType: 'Career Assessment',
+      status: 'completed'
+    };
+
+    // Save to assessment results storage
+    const existingResults = JSON.parse(localStorage.getItem('assessmentResults') || '[]');
+    const filteredResults = existingResults.filter((r: any) => r.userId !== user.email);
+    filteredResults.push(assessmentResult);
+    localStorage.setItem('assessmentResults', JSON.stringify(filteredResults));
+
+    // Update user's assessment status in registered users
+    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    const updatedUsers = registeredUsers.map((u: any) => {
+      if (u.email === user.email) {
+        return { ...u, hasAssessment: true, assessmentStatus: 'completed', lastActivity: new Date().toISOString() };
+      }
+      return u;
+    });
+    localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
+
+    // Update school students if user is associated with a school
+    const schoolStudents = JSON.parse(localStorage.getItem('schoolStudents') || '[]');
+    const updatedSchoolStudents = schoolStudents.map((s: any) => {
+      if (s.email === user.email || (s.studentName === user.name && s.phone === user.phone)) {
+        return { ...s, assessmentStatus: 'completed', completedAt: new Date().toISOString() };
+      }
+      return s;
+    });
+    localStorage.setItem('schoolStudents', JSON.stringify(updatedSchoolStudents));
+
+    console.log('Assessment results saved successfully');
   };
 
   const downloadPDF = () => {

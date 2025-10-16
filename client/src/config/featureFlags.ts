@@ -1,6 +1,6 @@
 // Global feature flags
 // Flip to false to re-enable auth
-export const DEV_AUTH_BYPASS: boolean = true;
+export const DEV_AUTH_BYPASS: boolean = false;
 
 // Optionally allow Vite env to override
 // If Vite env var is set, it takes precedence

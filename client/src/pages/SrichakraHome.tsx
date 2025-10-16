@@ -6,6 +6,7 @@ import SrichakraText from '@/components/custom/SrichakraText';
 // Import Accordion components
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { isDevBypassEnabled } from '@/config/featureFlags';
+import { getUserSession, logout as authLogout } from '@/lib/auth';
 // Import the Sri Yantra logo
 import sriYantraLogo from '../assets/images/logo/sri-yantra.png';
 // Import children images for slideshow
@@ -36,17 +37,20 @@ const SrichakraHome = () => {
   const [openAccordion, setOpenAccordion] = useState<string | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const devBypass = isDevBypassEnabled();
-  const hasAccess = devBypass || !!user;
+  const hasAccess = !!user; // Only allow access if user is logged in
 
-  // Check for user data in localStorage on component mount
+  // Check for user session on component mount
   useEffect(() => {
     try {
-      const userData = localStorage.getItem('user');
-      if (userData) {
-        setUser(JSON.parse(userData));
+      const userSession = getUserSession();
+      if (userSession) {
+        setUser({
+          name: userSession.name || userSession.email?.split('@')[0] || 'User',
+          email: userSession.email
+        });
       }
     } catch (error) {
-      console.error('Error retrieving user data:', error);
+      console.error('Error retrieving user session:', error);
     }
   }, []);
 
@@ -66,10 +70,7 @@ const SrichakraHome = () => {
 
   // Handle logout
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-    // Optionally redirect to login page
-    // window.location.href = '/login';
+    authLogout(); // This will clear session and redirect to login
   };
 
   // Handle smooth continuous slideshow rotation with 5 second interval
@@ -206,21 +207,19 @@ const SrichakraHome = () => {
                 </Button>
               </div>
             ) : (
-              // Hide login/signup buttons when dev bypass is enabled
-              devBypass ? null : (
-                <>
-                  <Link href="/login">
-                    <Button variant="outline" className="text-white border-white hover:bg-[#005964]">
-                      Login
-                    </Button>
-                  </Link>
-                  <Link href="/signup">
-                    <Button className="bg-white text-[#006D77] hover:bg-gray-100">
-                      Sign Up
-                    </Button>
-                  </Link>
-                </>
-              )
+              // Show login/signup buttons when not logged in
+              <>
+                <Link href="/login">
+                  <Button variant="outline" className="text-white border-white hover:bg-[#005964]">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/signup">
+                  <Button className="bg-white text-[#006D77] hover:bg-gray-100">
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
             )}
           </div>
         </div>
@@ -325,6 +324,13 @@ const SrichakraHome = () => {
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
+            </li>
+            <li>
+              <Link href="/school/login">
+                <button className="py-3 px-4 hover:bg-gray-100 transition-colors duration-200">
+                  Schools
+                </button>
+              </Link>
             </li>
           </ul>
           <div className="pl-4">
@@ -486,6 +492,27 @@ const SrichakraHome = () => {
         <Link href={hasAccess ? "/overseas" : "/login"}>
                   <Button className="w-full bg-[#006D77] hover:bg-[#005964]">
           {hasAccess ? "Learn More" : "Login to Access"}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Schools Card */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-105 max-w-[220px] w-full mx-auto">
+              <div className="h-40 flex items-center justify-center bg-gradient-to-br from-[#006D77] to-[#005964]">  
+                <div className="text-center text-white">
+                  <svg className="w-16 h-16 mx-auto mb-2" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6L21 9l-9-6zM18.82 9L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
+                  </svg>
+                  <h4 className="font-semibold">Schools</h4>
+                </div>
+              </div>
+              <div className="p-3">  
+                <h3 className="text-lg font-semibold mb-1 text-[#006D77]">School Portal</h3>  
+                <p className="text-gray-600 mb-3 text-sm">Access your school dashboard and manage student assessments.</p>  
+                <Link href="/school/login">
+                  <Button className="w-full bg-[#006D77] hover:bg-[#005964]">
+                    School Login
                   </Button>
                 </Link>
               </div>

@@ -168,10 +168,7 @@ export const withAdminAuth = <P extends object>(Component: React.ComponentType<P
     const [redirecting, setRedirecting] = useState(false);
     
     useEffect(() => {
-      if (isDevBypassEnabled()) {
-        // Bypass protection in development
-        return;
-      }
+      // Always require authentication - no bypass
       // If not loading and not authenticated, redirect
       if (!loading && !isAuthenticated) {
         console.log('User not authenticated, redirecting to login...');
@@ -189,7 +186,7 @@ export const withAdminAuth = <P extends object>(Component: React.ComponentType<P
     }, [loading, isAuthenticated]);
     
     // Show loading or render protected component
-    if ((loading && !isDevBypassEnabled()) || redirecting) {
+    if (loading || redirecting) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-[#83C5BE]">
           <div className="text-white text-xl">Loading...</div>
@@ -197,7 +194,7 @@ export const withAdminAuth = <P extends object>(Component: React.ComponentType<P
       );
     }
     
-    return (isAuthenticated || isDevBypassEnabled()) ? <Component {...props} /> : null;
+    return isAuthenticated ? <Component {...props} /> : null;
   };
   
   return ProtectedRoute;

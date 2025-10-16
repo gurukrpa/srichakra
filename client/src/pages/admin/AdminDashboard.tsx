@@ -14,6 +14,7 @@ const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { adminUser, logout, token } = useAdminAuth();
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [registeredUsers, setRegisteredUsers] = useState([]);
   
   // Fetch online users
   useEffect(() => {
@@ -54,6 +55,28 @@ const AdminDashboard = () => {
     
     return () => clearInterval(interval);
   }, [token]);
+
+  // Load registered users from localStorage
+  useEffect(() => {
+    const loadRegisteredUsers = () => {
+      try {
+        const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+        // Sort by registration date (newest first)
+        const sortedUsers = users.sort((a: any, b: any) => 
+          new Date(b.registrationDate).getTime() - new Date(a.registrationDate).getTime()
+        );
+        setRegisteredUsers(sortedUsers.slice(0, 5)); // Show only recent 5
+      } catch (error) {
+        console.error('Error loading registered users:', error);
+      }
+    };
+    
+    loadRegisteredUsers();
+    
+    // Refresh every 30 seconds to catch new registrations
+    const interval = setInterval(loadRegisteredUsers, 30000);
+    return () => clearInterval(interval);
+  }, []);
   
   // Handle logout
   const handleLogout = () => {
@@ -107,12 +130,12 @@ const AdminDashboard = () => {
         {/* Admin info */}
         <div className="p-4 border-b border-[#005964]">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-[#FFDDD2] flex items-center justify-center text-[#006D77] font-bold" aria-label={`${adminUser.name} profile`}>
-              {adminUser.name.charAt(0)}
+            <div className="h-10 w-10 rounded-full bg-[#FFDDD2] flex items-center justify-center text-[#006D77] font-bold" aria-label={`${adminUser?.name || 'Admin'} profile`}>
+              {adminUser?.name?.charAt(0) || 'A'}
             </div>
             <div>
-              <div className="text-white font-medium">{adminUser.name}</div>
-              <div className="text-xs text-gray-300">{adminUser.email}</div>
+              <div className="text-white font-medium">{adminUser?.name || 'Admin'}</div>
+              <div className="text-xs text-gray-300">{adminUser?.email || 'admin@srichakra.com'}</div>
             </div>
           </div>
         </div>
@@ -127,14 +150,14 @@ const AdminDashboard = () => {
               </a>
             </Link>
             
-            <Link href="/admin/dashboard/students">
+            <Link href="/admin/registered-users">
               <a className="flex items-center gap-3 px-3 py-2 text-white rounded-md hover:bg-[#005964]">
                 <Users size={18} />
-                <span>Students</span>
+                <span>Registered Users</span>
               </a>
             </Link>
             
-            <Link href="/admin/dashboard/schools">
+            <Link href="/admin/schools">
               <a className="flex items-center gap-3 px-3 py-2 text-white rounded-md hover:bg-[#005964]">
                 <School size={18} />
                 <span>Schools</span>
@@ -162,14 +185,21 @@ const AdminDashboard = () => {
               </a>
             </Link>
             
-            <Link href="/admin/dashboard/team-members">
+            <Link href="/admin/user-activity">
+              <a className="flex items-center gap-3 px-3 py-2 text-white rounded-md hover:bg-[#005964]">
+                <UserCheck size={18} />
+                <span>User Activity</span>
+              </a>
+            </Link>
+            
+            <Link href="/admin/team-members">
               <a className="flex items-center gap-3 px-3 py-2 text-white rounded-md hover:bg-[#005964]">
                 <Users size={18} />
                 <span>Team Members</span>
               </a>
             </Link>
             
-            <Link href="/admin/dashboard/settings">
+            <Link href="/admin/settings">
               <a className="flex items-center gap-3 px-3 py-2 text-white rounded-md hover:bg-[#005964]">
                 <Settings size={18} />
                 <span>Settings</span>
@@ -279,37 +309,51 @@ const AdminDashboard = () => {
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead>
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">School</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact Info</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">School & Student</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status & Date</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      <tr>
-                        <td className="px-4 py-3 whitespace-nowrap">Aditya Sharma</td>
-                        <td className="px-4 py-3 whitespace-nowrap">Delhi Public School</td>
-                        <td className="px-4 py-3 whitespace-nowrap">14</td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-3 whitespace-nowrap">Priya Singh</td>
-                        <td className="px-4 py-3 whitespace-nowrap">St. Mary's High School</td>
-                        <td className="px-4 py-3 whitespace-nowrap">16</td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-3 whitespace-nowrap">Rahul Kumar</td>
-                        <td className="px-4 py-3 whitespace-nowrap">Kendriya Vidyalaya</td>
-                        <td className="px-4 py-3 whitespace-nowrap">15</td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Pending</span>
-                        </td>
-                      </tr>
+                      {registeredUsers.length > 0 ? (
+                        registeredUsers.map((user: any, index) => (
+                          <tr key={user.id || index}>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                                <div className="text-sm text-gray-500">{user.email}</div>
+                                {user.phone && <div className="text-xs text-gray-400">{user.phone}</div>}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">{user.schoolName || 'Not specified'}</div>
+                              {user.studentName && <div className="text-xs text-gray-500">Student: {user.studentName}</div>}
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                              {user.age || 'N/A'}
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                user.lastLogin 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {user.lastLogin ? 'Active' : 'Registered'}
+                              </span>
+                              <div className="text-xs text-gray-400 mt-1">
+                                {new Date(user.registrationDate).toLocaleDateString()}
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                            No students registered yet
+                          </td>
+                        </tr>
+                      )}
                       <tr>
                         <td className="px-4 py-3 whitespace-nowrap">Sneha Patel</td>
                         <td className="px-4 py-3 whitespace-nowrap">City Montessori School</td>
