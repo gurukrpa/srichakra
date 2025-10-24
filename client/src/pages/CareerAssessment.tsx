@@ -701,13 +701,19 @@ const CareerAssessmentPage = () => {
                   'a balanced approach combining both analytical and creative thinking. This gives you flexibility in various career paths.'}
               </p>
             </div>
+          </div>
 
-            <h2>Five Senses Learning Profile</h2>
-            <div style="margin: 30px 0;">
+          <!-- Page 4: Five Senses Learning Profile (moved from Page 3) -->
+          <div class="page">
+            <div class="header">
+              <h1>Five Senses Learning Profile</h1>
+            </div>
+
+            <div style="margin: 10px 0 0 0;">
               <!-- Visual Learning Style -->
-              <div style="display: flex; align-items: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #FF6B6B;">
-                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #FF6B6B, #4ECDC4); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; flex-shrink: 0;">
-                  <span style="font-size: 2em;">👁️</span>
+              <div style="display: flex; align-items: center; margin: 16px 0; padding: 18px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #FF6B6B; break-inside: avoid; page-break-inside: avoid;">
+                <div style="width: 76px; height: 76px; background: linear-gradient(135deg, #FF6B6B, #4ECDC4); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 18px; flex-shrink: 0;">
+                  <span style="font-size: 1.9em;">👁️</span>
                 </div>
                 <div style="flex: 1;">
                   <h3 style="color: #FF6B6B; margin: 0 0 8px 0;">Visual Learning Style</h3>
@@ -719,9 +725,9 @@ const CareerAssessmentPage = () => {
               </div>
 
               <!-- Auditory Learning Style -->
-              <div style="display: flex; align-items: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #45B7D1;">
-                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #45B7D1, #96CEB4); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; flex-shrink: 0;">
-                  <span style="font-size: 2em;">👂</span>
+              <div style="display: flex; align-items: center; margin: 16px 0; padding: 18px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #45B7D1; break-inside: avoid; page-break-inside: avoid;">
+                <div style="width: 76px; height: 76px; background: linear-gradient(135deg, #45B7D1, #96CEB4); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 18px; flex-shrink: 0;">
+                  <span style="font-size: 1.9em;">👂</span>
                 </div>
                 <div style="flex: 1;">
                   <h3 style="color: #45B7D1; margin: 0 0 8px 0;">Auditory Learning Style</h3>
@@ -733,9 +739,9 @@ const CareerAssessmentPage = () => {
               </div>
 
               <!-- Kinesthetic Learning Style -->
-              <div style="display: flex; align-items: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #F39C12;">
-                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #F39C12, #E67E22); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; flex-shrink: 0;">
-                  <span style="font-size: 2em;">✋</span>
+              <div style="display: flex; align-items: center; margin: 16px 0; padding: 18px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #F39C12; break-inside: avoid; page-break-inside: avoid;">
+                <div style="width: 76px; height: 76px; background: linear-gradient(135deg, #F39C12, #E67E22); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 18px; flex-shrink: 0;">
+                  <span style="font-size: 1.9em;">✋</span>
                 </div>
                 <div style="flex: 1;">
                   <h3 style="color: #F39C12; margin: 0 0 8px 0;">Kinesthetic Learning Style</h3>
@@ -747,9 +753,9 @@ const CareerAssessmentPage = () => {
               </div>
 
               <!-- Olfactory Learning Style -->
-              <div style="display: flex; align-items: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #9B59B6;">
-                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #9B59B6, #8E44AD); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; flex-shrink: 0;">
-                  <span style="font-size: 2em;">👃</span>
+              <div style="display: flex; align-items: center; margin: 16px 0; padding: 18px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #9B59B6; break-inside: avoid; page-break-inside: avoid;">
+                <div style="width: 76px; height: 76px; background: linear-gradient(135deg, #9B59B6, #8E44AD); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 18px; flex-shrink: 0;">
+                  <span style="font-size: 1.9em;">👃</span>
                 </div>
                 <div style="flex: 1;">
                   <h3 style="color: #9B59B6; margin: 0 0 8px 0;">Olfactory Learning Style</h3>
@@ -761,9 +767,9 @@ const CareerAssessmentPage = () => {
               </div>
 
               <!-- Gustatory Learning Style -->
-              <div style="display: flex; align-items: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #E74C3C;">
-                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #E74C3C, #C0392B); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; flex-shrink: 0;">
-                  <span style="font-size: 2em;">👅</span>
+              <div style="display: flex; align-items: center; margin: 16px 0; padding: 18px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #E74C3C; break-inside: avoid; page-break-inside: avoid;">
+                <div style="width: 76px; height: 76px; background: linear-gradient(135deg, #E74C3C, #C0392B); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 18px; flex-shrink: 0;">
+                  <span style="font-size: 1.9em;">👅</span>
                 </div>
                 <div style="flex: 1;">
                   <h3 style="color: #E74C3C; margin: 0 0 8px 0;">Gustatory Learning Style</h3>
@@ -776,7 +782,7 @@ const CareerAssessmentPage = () => {
             </div>
           </div>
 
-          <!-- Page 4: Career Recommendations -->
+          <!-- Page 5: Career Recommendations (shifted from Page 4) -->
           <div class="page">
             <div class="header">
               <h1>Career Recommendations</h1>
@@ -787,7 +793,7 @@ const CareerAssessmentPage = () => {
               Based on your top domain scores, here are career suggestions aligned with your natural strengths:
             </p>
 
-            ${topDomains.map((domain, index) => {
+            ${topDomains.map((domain: any, index: number) => {
               const domainIcons = {
                 'Analytical': '📊',
                 'Verbal': '📝',
@@ -854,7 +860,7 @@ const CareerAssessmentPage = () => {
               <h3 style="margin-top: 0; color: #006D77;">Action Plan</h3>
               <ol style="font-size: 1.1em; line-height: 1.8;">
                 <li><strong>Explore Further:</strong> Research the recommended career paths that align with your top ${topDomains[0].domain} score.</li>
-                <li><strong>Skill Development:</strong> Consider developing skills in your secondary strength areas: ${topDomains.slice(1,3).map(d => d.domain).join(' and ')}.</li>
+                <li><strong>Skill Development:</strong> Consider developing skills in your secondary strength areas: ${topDomains.slice(1,3).map((d: any) => d.domain).join(' and ')}.</li>
                 <li><strong>Educational Path:</strong> Look into degree programs or certifications that support your career interests.</li>
                 <li><strong>Gain Experience:</strong> Seek internships, volunteer work, or projects in your areas of strength.</li>
                 <li><strong>Consult an Expert:</strong> Schedule a follow-up consultation with our career counselors for personalized guidance.</li>
