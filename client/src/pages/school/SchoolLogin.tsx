@@ -3,25 +3,11 @@ import { Eye, EyeOff, School } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { buildApiUrl } from '@/config/api';
 import sriYantraLogo from '../../assets/images/logo/sri-yantra.png';
 import SrichakraText from '@/components/custom/SrichakraText';
 
-// Get school credentials from localStorage (managed by admin)
-const getSchoolCredentials = () => {
-  const savedSchools = localStorage.getItem('schoolCredentials');
-  if (savedSchools) {
-    return JSON.parse(savedSchools);
-  }
-  // Fallback demo credential if no schools created yet
-  return [
-    {
-      email: 'demo@school.com',
-      password: 'demo123',
-      schoolName: 'Demo School'
-    }
-  ];
-};
-
+// School login using server-backed authentication
 const SchoolLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,35 +15,40 @@ const SchoolLogin = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
-    // Get current school credentials from admin
-    const schoolCredentials = getSchoolCredentials();
-    
-    // Find school with matching credentials
-    const school = schoolCredentials.find(
-      (s: any) => s.email === email && s.password === password
-    );
+    try {
+      // For now, use school code as password
+      const response = await fetch(buildApiUrl('/school/login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password })
+      });
 
-    if (school) {
-      // Save school session
-      localStorage.setItem('schoolAuth', JSON.stringify({
-        isAuthenticated: true,
-        email: school.email,
-        schoolName: school.schoolName,
-        loginTime: new Date().toISOString()
-      }));
-      
-      // Redirect to school dashboard
-      window.location.href = '/school/dashboard';
-    } else {
-      setError('Invalid email or password');
+      // Be robust to non-JSON responses (e.g., when dev server serves HTML)
+      const contentType = response.headers.get('content-type') || '';
+      const data = contentType.includes('application/json')
+        ? await response.json()
+        : { success: false, message: 'Server returned non-JSON response' };
+
+      if (response.ok && data.success) {
+        // Store school info and redirect
+        if (typeof window !== 'undefined') {
+          window.sessionStorage.setItem('school_session', JSON.stringify(data.school));
+        }
+        window.location.href = '/school/dashboard';
+      } else {
+        setError(data.message || 'Invalid email or school code');
+      }
+    } catch (err) {
+      setError('Unable to connect to server. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   return (
@@ -104,13 +95,13 @@ const SchoolLogin = () => {
             {/* Password Field */}
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                Password
+                School Code
               </Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter password"
+                  placeholder="Enter school code"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -160,17 +151,11 @@ const SchoolLogin = () => {
           {/* Help Text */}
           <div className="mt-6 text-center">
             <p className="text-xs text-gray-500">
-              Contact admin for school code and password
+              Use your school email and school code to login
             </p>
           </div>
 
-          {/* Demo Credentials for Testing */}
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-600 font-semibold mb-1">Demo Access:</p>
-            <p className="text-xs text-gray-500">Email: demo@school.com</p>
-            <p className="text-xs text-gray-500">Password: demo123</p>
-            <p className="text-xs text-gray-400 mt-1">Ask admin for your school's login credentials</p>
-          </div>
+          
         </div>
       </div>
     </div>

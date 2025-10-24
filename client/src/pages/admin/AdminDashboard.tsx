@@ -27,12 +27,16 @@ const AdminDashboard = () => {
         }
         
         console.log('Fetching online users...');
+        const useBearer = token && token !== 'cookie';
         const response = await fetch(ADMIN_API.onlineUsers, {
           method: 'GET',
-          headers: {
+          headers: useBearer ? {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
-          }
+          } : {
+            'Content-Type': 'application/json'
+          },
+          credentials: useBearer ? 'same-origin' : 'include'
         });
         
         if (response.ok) {
@@ -56,24 +60,23 @@ const AdminDashboard = () => {
     return () => clearInterval(interval);
   }, [token]);
 
-  // Load registered users from localStorage
+  // Load registered users from API
   useEffect(() => {
-    const loadRegisteredUsers = () => {
+    const loadRegisteredUsers = async () => {
       try {
-        const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-        // Sort by registration date (newest first)
-        const sortedUsers = users.sort((a: any, b: any) => 
-          new Date(b.registrationDate).getTime() - new Date(a.registrationDate).getTime()
-        );
-        setRegisteredUsers(sortedUsers.slice(0, 5)); // Show only recent 5
-      } catch (error) {
-        console.error('Error loading registered users:', error);
-      }
+        const res = await fetch('/api/admin/users?limit=5', { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const mapped = (data.users || []).map((u: any) => ({
+          id: u.id,
+          name: u.full_name || u.username,
+          email: u.username,
+          registrationDate: u.created_at
+        }));
+        setRegisteredUsers(mapped);
+      } catch {}
     };
-    
     loadRegisteredUsers();
-    
-    // Refresh every 30 seconds to catch new registrations
     const interval = setInterval(loadRegisteredUsers, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -122,6 +125,7 @@ const AdminDashboard = () => {
           <button 
             onClick={() => setSidebarOpen(false)}
             className="md:hidden text-white hover:text-gray-200"
+            aria-label="Close sidebar"
           >
             <X size={20} />
           </button>
@@ -236,6 +240,7 @@ const AdminDashboard = () => {
             <button 
               onClick={() => setSidebarOpen(true)}
               className="md:hidden text-gray-600 hover:text-gray-900"
+              aria-label="Open sidebar"
             >
               <Menu size={24} />
             </button>

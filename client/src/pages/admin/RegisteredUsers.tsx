@@ -57,42 +57,36 @@ const RegisteredUsersPage = () => {
     try {
       setLoading(true);
       
-      // Try to get from API first
-      try {
-        const response = await fetch('/api/admin/registered-users', {
-          headers: {
-            'Authorization': `Bearer demo-token-admin`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setUsers(data.users);
-          setStats(data.stats);
-        } else {
-          throw new Error('API not available');
-        }
-      } catch (apiError) {
-        // Fallback to localStorage
-        const localUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-        setUsers(localUsers);
-        
-        // Calculate local stats
-        const now = new Date();
-        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        
-        setStats({
-          totalRegistered: localUsers.length,
-          activeUsers: localUsers.filter((u: any) => u.lastLogin && 
-            new Date(u.lastLogin) > oneDayAgo).length,
-          newRegistrationsToday: localUsers.filter((u: any) => 
-            new Date(u.registrationDate) > oneDayAgo).length,
-          averageAge: Math.round(localUsers.reduce((sum: number, u: any) => 
-            sum + parseInt(u.age || '0'), 0) / (localUsers.length || 1)),
-          topCities: []
-        });
-      }
+      const response = await fetch('/api/admin/users?limit=200', { credentials: 'include' });
+      if (!response.ok) throw new Error('API not available');
+      const data = await response.json();
+      const mapped = (data.users || []).map((u: any) => ({
+        id: u.id,
+        name: u.full_name || u.username,
+        email: u.username,
+        phone: '',
+        studentName: '',
+        parentName: '',
+        schoolName: u.school_name || '',
+        age: u.age || '',
+        occupation: u.occupation || '',
+        city: u.city || '',
+        country: u.country || '',
+        registrationDate: u.created_at,
+        lastLogin: null,
+        notes: u.notes || ''
+      }));
+      setUsers(mapped);
+      // Basic stats
+      const now = new Date();
+      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      setStats({
+        totalRegistered: mapped.length,
+        activeUsers: 0,
+        newRegistrationsToday: mapped.filter((u: any) => new Date(u.registrationDate) > oneDayAgo).length,
+        averageAge: Math.round(mapped.reduce((sum: number, u: any) => sum + parseInt(u.age || '0'), 0) / (mapped.length || 1)),
+        topCities: []
+      });
       
       setError(null);
     } catch (err) {
@@ -125,23 +119,7 @@ const RegisteredUsersPage = () => {
   const deleteUser = async (userToDelete: RegisteredUser) => {
     try {
       setIsDeleting(true);
-      
-      // Get current users from localStorage
-      const currentUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-      
-      // Filter out the user to delete
-      const updatedUsers = currentUsers.filter((user: any) => user.id !== userToDelete.id);
-      
-      // Update localStorage
-      localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
-      
-      // Also check if this is the currently logged in user and remove from 'user' storage
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      if (currentUser.id === userToDelete.id) {
-        localStorage.removeItem('user');
-      }
-      
-      // Update local state
+      // TODO: implement server-side delete when ready; for now, filter locally
       setUsers(prev => prev.filter(user => user.id !== userToDelete.id));
       
       // Update stats
@@ -158,8 +136,8 @@ const RegisteredUsersPage = () => {
       setSelectedUser(null);
       
     } catch (error) {
-      console.error('Error deleting user:', error);
-      setError('Failed to delete user. Please try again.');
+  console.error('Error deleting user:', error);
+  setError('Failed to delete user. Please try again.');
     } finally {
       setIsDeleting(false);
     }

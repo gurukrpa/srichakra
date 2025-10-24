@@ -18,7 +18,7 @@
     ]
   },
   "functions": {
-    "source": "dist",
-    "runtime": "nodejs18"
+  "source": "dist",
+  "runtime": "nodejs20"
   }
 }

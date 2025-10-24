@@ -43,35 +43,12 @@ const SchoolStudents = () => {
   });
 
   useEffect(() => {
-    // Check if school is authenticated
-    const schoolAuth = localStorage.getItem('schoolAuth');
-    if (!schoolAuth) {
-      window.location.href = '/school/login';
-      return;
-    }
-
-    const school = JSON.parse(schoolAuth);
-    setSchoolInfo(school);
-
-    // Load school-created students
-    const schoolStudents = JSON.parse(localStorage.getItem('schoolStudents') || '[]');
-    const myStudents = schoolStudents.filter((s: any) => s.schoolEmail === school.email);
-    setStudents(myStudents.filter((s: any) => s.createdBy === 'school'));
-
-    // Load registered students who used this school's email
-    const allRegistered = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    const myRegistered = allRegistered.filter((s: any) => s.schoolEmail === school.email);
-    setRegisteredStudents(myRegistered);
+  // TODO: Replace with server-backed session and students
+  window.location.href = '/school/login';
   }, []);
 
   // Save students to localStorage
-  const saveStudents = (updatedStudents: SchoolStudent[]) => {
-    const allSchoolStudents = JSON.parse(localStorage.getItem('schoolStudents') || '[]');
-    const otherStudents = allSchoolStudents.filter((s: any) => s.schoolEmail !== schoolInfo?.email || s.createdBy !== 'school');
-    const newAllStudents = [...otherStudents, ...updatedStudents.map(s => ({ ...s, schoolEmail: schoolInfo.email, createdBy: 'school' }))];
-    localStorage.setItem('schoolStudents', JSON.stringify(newAllStudents));
-    setStudents(updatedStudents);
-  };
+  const saveStudents = (updatedStudents: SchoolStudent[]) => { setStudents(updatedStudents); };
 
   // Generate school ID
   const generateSchoolId = (studentName: string) => {

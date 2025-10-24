@@ -37,19 +37,9 @@ const SchoolManagement = () => {
     schoolName: ''
   });
 
-  // Load schools from localStorage
-  useEffect(() => {
-    const savedSchools = localStorage.getItem('schoolCredentials');
-    if (savedSchools) {
-      setSchools(JSON.parse(savedSchools));
-    }
-  }, []);
-
-  // Save schools to localStorage
-  const saveSchools = (updatedSchools: SchoolCredential[]) => {
-    localStorage.setItem('schoolCredentials', JSON.stringify(updatedSchools));
-    setSchools(updatedSchools);
-  };
+  // TODO: Replace with server-backed schools API; localStorage removed by request
+  useEffect(() => { setSchools([]); }, []);
+  const saveSchools = (updatedSchools: SchoolCredential[]) => { setSchools(updatedSchools); };
 
   // Add new school
   const addSchool = () => {
@@ -66,8 +56,8 @@ const SchoolManagement = () => {
       createdAt: new Date().toISOString()
     };
 
-    const updatedSchools = [...schools, school];
-    saveSchools(updatedSchools);
+  const updatedSchools = [...schools, school];
+  saveSchools(updatedSchools);
     
     setNewSchool({ email: '', password: '', schoolName: '' });
     setShowAddForm(false);

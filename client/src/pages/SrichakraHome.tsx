@@ -469,11 +469,11 @@ const SrichakraHome = () => {
               <div className="p-3">  
                 <h3 className="text-lg font-semibold mb-1 text-[#006D77]">Career Assessment</h3>  
                 <p className="text-gray-600 mb-3 text-sm">Discover your ideal career path with comprehensive assessment.</p>  
-        <Link href={hasAccess ? "/career-assessment" : "/login"}>
-                  <Button className="w-full bg-[#006D77] hover:bg-[#005964]">
-          {hasAccess ? "Take Test" : "Login to Access"}
-                  </Button>
-                </Link>
+  <Link href="/career-assessment">
+      <Button className="w-full bg-[#006D77] hover:bg-[#005964]">
+    Take Test
+      </Button>
+    </Link>
               </div>
             </div>
 

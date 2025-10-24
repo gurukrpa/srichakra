@@ -1,15 +1,24 @@
+console.log("Starting server...");
+
 // Load environment variables from .env file
 import 'dotenv/config';
 
+console.log("Environment variables loaded");
+
 import express, { type Request, Response, NextFunction } from "express";
 import cors from 'cors';
-import { registerRoutes } from "./routes";
+
+console.log("Express imported");
+
+import { registerRoutes } from "./routes-minimal";
 import { setupVite, serveStatic, log } from "./vite";
+
+console.log("All imports loaded");
 
 const app = express();
 // Enable CORS for all routes
 app.use(cors({
-  origin: ["http://localhost:5000", "http://localhost:3000", "http://localhost:5173"], // Include Vite dev server
+  origin: ["http://localhost:5000", "http://localhost:3000", "http://localhost:5173", "http://localhost:4173"], // Include Vite dev & preview
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']

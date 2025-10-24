@@ -8,8 +8,49 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import SrichakraText from '@/components/custom/SrichakraText';
 import sriYantraLogo from '../assets/images/logo/sri-yantra.png';
+import { buildApiUrl } from '@/config/api';
 
 const SignUp = () => {
+  const buildTag = 'signup-paused-2025-10-24';
+
+  // Temporarily pause all sign-ups (Public and School)
+  const SIGNUPS_PAUSED = true;
+  if (SIGNUPS_PAUSED) {
+    return (
+      <div className="min-h-screen bg-[#83C5BE] flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-8 text-center">
+          <div className="flex flex-col items-center mb-4">
+            <div className="h-14 w-14 mb-1">
+              <img src={sriYantraLogo} alt="Sri Yantra Symbol" className="h-full w-full object-cover rounded-full" />
+            </div>
+            <SrichakraText size="2xl" color="text-[#800000]" decorative={true} withBorder={true}>
+              Srichakra
+            </SrichakraText>
+            <p className="text-gray-600 text-sm mt-1">Career Assessment</p>
+          </div>
+
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Registrations temporarily paused</h2>
+          <p className="text-gray-600 mb-6">
+            Sign-ups for Career Assessment are currently paused for both Public and School registrations.
+            Please check back soon or contact us if you need assistance.
+          </p>
+
+          <div className="flex items-center justify-center gap-3">
+            <Link href="/">
+              <Button variant="secondary">Back to Home</Button>
+            </Link>
+            <Link href="/login">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">Login</Button>
+            </Link>
+          </div>
+
+          <div className="mt-6 text-sm text-gray-500">
+            Need help? <a className="text-blue-600 underline" href="mailto:admin@srichakra.com">admin@srichakra.com</a>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,6 +71,7 @@ const SignUp = () => {
   const [city, setCity] = useState('');
   const [country, setCountry] = useState('');
   const [notes, setNotes] = useState('');
+  const [studentClass, setStudentClass] = useState('');
   
   // School/Public registration states
   const [registrationType, setRegistrationType] = useState<'school' | 'public'>('public');
@@ -37,25 +79,24 @@ const SignUp = () => {
   const [schoolId, setSchoolId] = useState('');
   const [availableSchools, setAvailableSchools] = useState<any[]>([]);
 
-  // Load available schools
+  // Load available schools (disabled: we no longer use local storage)
   useEffect(() => {
-    const schools = JSON.parse(localStorage.getItem('schoolCredentials') || '[]');
-    setAvailableSchools(schools);
+    setAvailableSchools([]);
+
+    // Allow URL to force school mode: /signup?type=school or ?school=1
+    const params = new URLSearchParams(window.location.search);
+    const urlType = params.get('type');
+    const urlSchool = params.get('school');
+    if (urlType === 'school' || urlSchool === '1') {
+      setRegistrationType('school');
+    }
   }, []);
 
   // Generate school ID when school is selected
   const generateSchoolId = (schoolEmail: string, studentName: string) => {
-    const school = availableSchools.find(s => s.email === schoolEmail);
-    if (!school) return '';
-    
-    // Get school code from email (abc@school.com -> ABC)
+    if (!schoolEmail) return '';
     const schoolCode = schoolEmail.split('@')[0].toUpperCase().substring(0, 3);
-    
-    // Get existing students for this school to determine next number
-    const existingStudents = JSON.parse(localStorage.getItem('schoolStudents') || '[]');
-    const schoolStudents = existingStudents.filter((s: any) => s.schoolEmail === schoolEmail);
-    const nextNumber = (schoolStudents.length + 1).toString().padStart(3, '0');
-    
+    const nextNumber = '001';
     return `${schoolCode}${nextNumber}`;
   };
 
@@ -71,8 +112,9 @@ const SignUp = () => {
     e.preventDefault();
     setError('');
     
-    // Basic validation
-    if (!name || !email || !phone || !password || !confirmPassword || !studentName || !parentName) {
+    const effectiveStudentName = studentName || name;
+    // Basic validation (keep it minimal to avoid blocking valid submissions)
+    if (!name || !email || !password || !confirmPassword) {
       setError('Please fill in all required fields');
       return;
     }
@@ -80,23 +122,20 @@ const SignUp = () => {
     // School registration validation
     if (registrationType === 'school') {
       if (!schoolEmail || !schoolId) {
-        setError('Please select a school and ensure student ID is generated');
+        setError('Please enter your School Email and Student ID');
         return;
       }
-      
-      // Validate school ID doesn't already exist
-      const existingStudents = JSON.parse(localStorage.getItem('schoolStudents') || '[]');
-      if (existingStudents.some((s: any) => s.schoolId === schoolId)) {
-        setError('Student ID already exists. Please try again.');
-        return;
-      }
+      // TODO: validate school ID uniqueness via server when school endpoints are ready
     }
     
-    // Phone validation
-    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-    if (!phoneRegex.test(phone.replace(/\s+/g, ''))) {
-      setError('Please enter a valid phone number');
-      return;
+    // Phone validation (optional; only validate if provided)
+    if (phone && phone.trim().length > 0) {
+      const phoneRegex = /^[\+]?[0-9][0-9\s()-]{6,}$/;
+      const normalized = phone.trim();
+      if (!phoneRegex.test(normalized)) {
+        setError('Please enter a valid phone number');
+        return;
+      }
     }
     
     // Email validation
@@ -126,62 +165,93 @@ const SignUp = () => {
     
     try {
       setIsLoading(true);
-      // Here you would typically make an API call to your backend
-      // For now, we'll simulate a signup with a timeout
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Store user data in localStorage before redirecting
-      const userData = {
-        id: `user_${Date.now()}`,
+
+      // Optionally validate school details and include schoolCode/studentId if valid
+      let schoolCodeToSend: string | undefined;
+      let includeSchoolLink = false;
+      if (registrationType === 'school' && schoolEmail && schoolId) {
+        const codeCandidate = schoolEmail.includes('@')
+          ? schoolEmail.split('@')[0].toUpperCase()
+          : schoolEmail.toUpperCase();
+        try {
+          const vRes = await fetch(buildApiUrl('/school/validate-student'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              schoolCode: codeCandidate,
+              studentId: schoolId,
+              studentName: effectiveStudentName,
+              parentName,
+              studentClass,
+            }),
+          });
+          if (vRes.ok) {
+            includeSchoolLink = true;
+            schoolCodeToSend = codeCandidate;
+          } else {
+            // Non-blocking: proceed without school link
+            includeSchoolLink = false;
+          }
+        } catch (e) {
+          // Validation unreachable; proceed without linking
+          includeSchoolLink = false;
+        }
+      }
+
+      // Combine notes with phone and schoolId for storage if schema lacks columns
+      const combinedNotes = [
+        notes || '',
+        phone ? `Phone: ${phone}` : '',
+        effectiveStudentName ? `StudentName: ${effectiveStudentName}` : '',
+        parentName ? `Parent: ${parentName}` : '',
+        studentClass ? `Class: ${studentClass}` : '',
+        registrationType === 'school' && schoolId ? `SchoolID: ${schoolId}` : ''
+      ].filter(Boolean).join(' | ');
+
+      const payload: any = {
         name,
-        email, 
-        phone,
+        email,
         password,
-        studentName,
+        studentName: effectiveStudentName,
         parentName,
         schoolName,
         age,
         occupation,
         city,
         country,
-        notes,
-        registrationDate: new Date().toISOString(),
-        lastLogin: null,
-        registrationType,
-        schoolEmail: registrationType === 'school' ? schoolEmail : null,
-        schoolId: registrationType === 'school' ? schoolId : null,
-        assessmentStatus: 'not_started',
-        assessmentData: null
+        notes: combinedNotes,
+        phone,
+        studentClass,
       };
-      
-      localStorage.setItem('user', JSON.stringify(userData));
-      
-      // Also save to a list of all registered users for admin dashboard
-      const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-      existingUsers.push(userData);
-      localStorage.setItem('registeredUsers', JSON.stringify(existingUsers));
-      
-      // If school registration, also store in school-specific storage
-      if (registrationType === 'school') {
-        const schoolStudents = JSON.parse(localStorage.getItem('schoolStudents') || '[]');
-        schoolStudents.push({
-          ...userData,
-          schoolEmail,
-          schoolId,
-          createdBy: 'public_signup'
-        });
-        localStorage.setItem('schoolStudents', JSON.stringify(schoolStudents));
+      if (includeSchoolLink && schoolCodeToSend && schoolId) {
+        payload.schoolCode = schoolCodeToSend;
+        payload.studentId = schoolId;
       }
-      
-      // Show success message with school ID if applicable
-      if (registrationType === 'school') {
+
+      const response = await fetch(buildApiUrl('/register'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error('Server returned non-JSON response');
+      }
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed');
+      }
+
+      if (registrationType === 'school' && schoolId) {
         alert(`Registration successful! Your School ID is: ${schoolId}\nPlease remember this ID for assessment access.`);
       }
-      
-      // Successful signup would redirect to login or home
+
+      // Redirect to login after success
       window.location.href = '/login';
-    } catch (err) {
-      setError('An error occurred. Please try again later.');
+    } catch (err: any) {
+      const msg = (err && (err.message || err.toString())) || 'An error occurred. Please try again later.';
+      setError(msg);
       console.error('Signup error:', err);
     } finally {
       setIsLoading(false);
@@ -192,7 +262,7 @@ const SignUp = () => {
 
   return (
     <div className="min-h-screen bg-[#83C5BE] flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-4xl bg-white rounded-lg shadow-lg p-6">
+      <div className="w-full max-w-6xl bg-white rounded-lg shadow-lg p-8">
         <div className="flex flex-col items-center mb-4">
           <div className="h-14 w-14 mb-1">
             <img 
@@ -213,35 +283,72 @@ const SignUp = () => {
           </div>
         )}
         
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} autoComplete="off">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-3">
               {/* Registration Type Selection */}
-              <h3 className="font-medium text-gray-700 mb-3 border-b">Registration Type</h3>
-              <div className="flex gap-6 mb-6">
-                <label className="flex items-center gap-2 cursor-pointer">
+              <h3 className="font-bold text-xl text-gray-800 mb-6 text-center">Choose Your Registration Type</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <label className={`cursor-pointer border-2 rounded-xl p-6 transition-all duration-200 ${
+                  registrationType === 'public' 
+                    ? 'border-blue-500 bg-blue-50 shadow-lg transform scale-105' 
+                    : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md'
+                }`}>
                   <input
                     type="radio"
                     name="registrationType"
                     value="public"
                     checked={registrationType === 'public'}
                     onChange={(e) => setRegistrationType(e.target.value as 'public' | 'school')}
-                    className="w-4 h-4 text-blue-600"
+                    className="sr-only"
                   />
-                  <User className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium text-gray-700">Public Registration</span>
+                  <div className="text-center">
+                    <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
+                      registrationType === 'public' ? 'bg-blue-500' : 'bg-gray-100'
+                    }`}>
+                      <User className={`w-8 h-8 ${registrationType === 'public' ? 'text-white' : 'text-gray-500'}`} />
+                    </div>
+                    <h4 className={`text-lg font-bold mb-2 ${registrationType === 'public' ? 'text-blue-700' : 'text-gray-700'}`}>
+                      Public Registration
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      Individual students and parents can register directly
+                    </p>
+                    {registrationType === 'public' && (
+                      <div className="mt-3 text-blue-600 font-semibold text-sm">✓ Selected</div>
+                    )}
+                  </div>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
+                
+                <label className={`cursor-pointer border-2 rounded-xl p-6 transition-all duration-200 ${
+                  registrationType === 'school' 
+                    ? 'border-green-500 bg-green-50 shadow-lg transform scale-105' 
+                    : 'border-gray-200 bg-white hover:border-green-300 hover:shadow-md'
+                }`}>
                   <input
                     type="radio"
                     name="registrationType"
                     value="school"
                     checked={registrationType === 'school'}
                     onChange={(e) => setRegistrationType(e.target.value as 'public' | 'school')}
-                    className="w-4 h-4 text-blue-600"
+                    className="sr-only"
                   />
-                  <School className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium text-gray-700">From School</span>
+                  <div className="text-center">
+                    <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
+                      registrationType === 'school' ? 'bg-green-500' : 'bg-gray-100'
+                    }`}>
+                      <School className={`w-8 h-8 ${registrationType === 'school' ? 'text-white' : 'text-gray-500'}`} />
+                    </div>
+                    <h4 className={`text-lg font-bold mb-2 ${registrationType === 'school' ? 'text-green-700' : 'text-gray-700'}`}>
+                      From School
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      Students registering through their school with a Student ID
+                    </p>
+                    {registrationType === 'school' && (
+                      <div className="mt-3 text-green-600 font-semibold text-sm">✓ Selected</div>
+                    )}
+                  </div>
                 </label>
               </div>
               
@@ -258,6 +365,9 @@ const SignUp = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="email"
+                autoCapitalize="none"
+                spellCheck={false}
                 className="h-9"
               />
             </div>
@@ -266,36 +376,37 @@ const SignUp = () => {
             {registrationType === 'school' && (
               <div>
                 <Label htmlFor="schoolEmail" className="text-sm">School Email *</Label>
-                <select
+                <Input
                   id="schoolEmail"
-                  title="Select School Email"
+                  type="email"
+                  placeholder="school@example.com"
                   value={schoolEmail}
                   onChange={(e) => setSchoolEmail(e.target.value)}
                   required
-                  className="w-full h-9 px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Select your school</option>
-                  {availableSchools.map((school) => (
-                    <option key={school.id} value={school.email}>
-                      {school.schoolName} ({school.email})
-                    </option>
-                  ))}
-                </select>
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  className="h-9"
+                />
               </div>
             )}
             
-            {/* School ID Field - Auto-generated for school registration */}
-            {registrationType === 'school' && schoolId && (
+            {/* School ID Field - Required for school registration */}
+            {registrationType === 'school' && (
               <div>
-                <Label htmlFor="schoolId" className="text-sm">School ID (Auto-generated)</Label>
+                <Label htmlFor="schoolId" className="text-sm">Student ID (from your School) *</Label>
                 <Input
                   id="schoolId"
                   type="text"
                   value={schoolId}
-                  readOnly
-                  className="h-9 bg-gray-100 font-mono font-semibold text-blue-600"
-                  placeholder="Will be generated automatically"
+                  onChange={(e) => setSchoolId(e.target.value)}
+                  required
+                  className="h-9 font-mono"
+                  placeholder="Enter the ID your school gave you"
+                  autoComplete="off"
+                  autoCapitalize="characters"
                 />
+                <p className="text-xs text-gray-500 mt-1">Enter the Student ID provided by your school</p>
               </div>
             )}
             <div>
@@ -307,8 +418,22 @@ const SignUp = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
+                autoComplete="name"
                 className="h-9"
               />
+            </div>
+            <div>
+              <Label htmlFor="studentName" className="text-sm">Student Name</Label>
+              <Input
+                id="studentName"
+                type="text"
+                placeholder="Student full name"
+                value={studentName}
+                onChange={(e) => setStudentName(e.target.value)}
+                autoComplete="name"
+                className="h-9"
+              />
+              <p className="text-xs text-gray-500 mt-1">If left empty, we'll use the Full Name as Student Name.</p>
             </div>
             <div>
               <Label htmlFor="phone" className="text-sm">Phone Number</Label>
@@ -318,8 +443,9 @@ const SignUp = () => {
                 placeholder="+1 (555) 123-4567"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                required
                 className="h-9"
+                autoComplete="tel"
+                inputMode="tel"
               />
             </div>
             
@@ -333,6 +459,7 @@ const SignUp = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  autoComplete="new-password"
                   className="h-9"
                 />
                 <button
@@ -356,6 +483,7 @@ const SignUp = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
+                  autoComplete="new-password"
                   className="h-9"
                 />
                 <button
@@ -376,34 +504,39 @@ const SignUp = () => {
             
             <div>
               <Label htmlFor="parentName" className="text-sm">Parent's Name</Label>
-              <Input id="parentName" type="text" value={parentName} onChange={(e) => setParentName(e.target.value)} required className="h-9" />
+              <Input id="parentName" type="text" value={parentName} onChange={(e) => setParentName(e.target.value)} className="h-9" autoComplete="off" />
             </div>
             
             <div>
               <Label htmlFor="occupation" className="text-sm">Parent's Occupation</Label>
-              <Input id="occupation" type="text" value={occupation} onChange={(e) => setOccupation(e.target.value)} className="h-9" />
+              <Input id="occupation" type="text" value={occupation} onChange={(e) => setOccupation(e.target.value)} className="h-9" autoComplete="organization-title" />
             </div>
             
             <div>
               <Label htmlFor="schoolName" className="text-sm">School Name</Label>
-              <Input id="schoolName" type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)} className="h-9" />
+              <Input id="schoolName" type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)} className="h-9" autoComplete="organization" />
             </div>
             
             <div>
               <Label htmlFor="age" className="text-sm">Student's Age</Label>
-              <Input id="age" type="number" value={age} onChange={(e) => setAge(e.target.value)} className="h-9" />
+              <Input id="age" type="number" value={age} onChange={(e) => setAge(e.target.value)} className="h-9" inputMode="numeric" autoComplete="bday" />
             </div>
             
             <div>
+              <Label htmlFor="studentClass" className="text-sm">Class / Grade</Label>
+              <Input id="studentClass" type="text" value={studentClass} onChange={(e) => setStudentClass(e.target.value)} className="h-9" autoComplete="off" />
+            </div>
+
+            <div>
               <Label htmlFor="city" className="text-sm">City</Label>
-              <Input id="city" type="text" value={city} onChange={(e) => setCity(e.target.value)} className="h-9" />
+              <Input id="city" type="text" value={city} onChange={(e) => setCity(e.target.value)} className="h-9" autoComplete="address-level2" />
             </div>
             
             <div className="md:col-span-3">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="country" className="text-sm">Country</Label>
-                  <Input id="country" type="text" value={country} onChange={(e) => setCountry(e.target.value)} className="h-9" />
+                  <Input id="country" type="text" value={country} onChange={(e) => setCountry(e.target.value)} className="h-9" autoComplete="country" />
                 </div>
                 
                 <div className="md:col-span-2">
@@ -415,6 +548,7 @@ const SignUp = () => {
                     placeholder="Tell us why you're signing up"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
+                    autoComplete="off"
                   />
                 </div>
               </div>
@@ -454,6 +588,7 @@ const SignUp = () => {
               Sign in
             </Link>
           </p>
+          <div className="text-[10px] text-gray-400 mt-1">Build: {buildTag}</div>
         </div>
       </div>
     </div>

@@ -167,10 +167,67 @@ const Career = () => {
 
       <main className="container mx-auto py-8 px-4">
         {!isSubmitted ? (
-          <div className="max-w-3xl mx-auto">
-            <Card className="mb-8 border-t-4 border-t-[#006D77]">
+          <div className="max-w-4xl mx-auto">
+            {/* Assessment Options */}
+            <div className="grid md:grid-cols-2 gap-6 mb-8">
+              <Card className="border-t-4 border-t-[#006D77] hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <CardTitle className="text-xl text-[#006D77]">🎯 Quick Career Form</CardTitle>
+                  <CardDescription>
+                    Traditional career counseling form - simple and straightforward assessment
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    <li>• Basic personal information</li>
+                    <li>• Interest and strengths survey</li>
+                    <li>• Career goals discussion</li>
+                    <li>• 5-10 minutes to complete</li>
+                  </ul>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    className="w-full bg-[#006D77] hover:bg-[#005964]"
+                    onClick={() => {
+                      // Scroll to the form below
+                      document.getElementById('career-form')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    Start Quick Assessment
+                  </Button>
+                </CardFooter>
+              </Card>
+
+              <Card className="border-t-4 border-t-[#2563eb] hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <CardTitle className="text-xl text-[#2563eb]">🧠 Comprehensive Assessment</CardTitle>
+                  <CardDescription>
+                    Advanced multi-dimensional career analysis with MBTI, Multiple Intelligences, and detailed reporting
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    <li>• 60 scientific assessment questions</li>
+                    <li>• MBTI personality analysis</li>
+                    <li>• Multiple intelligences mapping</li>
+                    <li>• RIASEC interest profiling</li>
+                    <li>• Colorful dashboard & PDF report</li>
+                    <li>• 15-20 minutes to complete</li>
+                  </ul>
+                </CardContent>
+                <CardFooter>
+                  <Link href="/comprehensive-assessment">
+                    <Button className="w-full bg-[#2563eb] hover:bg-[#1d4ed8]">
+                      Start Comprehensive Assessment
+                    </Button>
+                  </Link>
+                </CardFooter>
+              </Card>
+            </div>
+
+            <Card id="career-form" className="mb-8 border-t-4 border-t-[#006D77]">
               <CardHeader>
-                <CardTitle>Career Assessment</CardTitle>
+                <CardTitle>Quick Career Assessment Form</CardTitle>
                 <CardDescription>
                   Fill out this form to receive personalized career guidance based on your interests, strengths, and goals.
                 </CardDescription>

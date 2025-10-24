@@ -33,8 +33,10 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   // Check if user is authenticated on initial load
   useEffect(() => {
-    const checkAuth = () => {
+  const checkAuth = async () => {
       try {
+        // Try Bearer token from sessionStorage first (fallback if cookie not sent)
+        const storedToken = typeof window !== 'undefined' ? window.sessionStorage.getItem('adm_token') : null;
         // In development, auto-login with a mock admin user
         if (isDevBypassEnabled()) {
           const devUser: AdminUser = {
@@ -50,27 +52,40 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
           return;
         }
 
-        const storedToken = localStorage.getItem('adminToken');
-        const userData = localStorage.getItem('adminUser');
-        
-        if (storedToken && userData) {
-          const user = JSON.parse(userData) as AdminUser;
-          
-          // Verify user has a valid role
-          if (['super_admin', 'admin', 'teacher', 'staff'].includes(user.role)) {
-            setToken(storedToken);
-            setAdminUser(user);
-            setIsAuthenticated(true);
-          } else {
-            // Clear invalid data
-            localStorage.removeItem('adminToken');
-            localStorage.removeItem('adminUser');
+        // Strategy: try cookie first, then Bearer fallback if provided
+        let authed = false;
+        try {
+          const resp = await fetch(ADMIN_API.profile, { credentials: 'include' });
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data?.success && data?.user) {
+              setAdminUser(data.user);
+              setIsAuthenticated(true);
+              setToken('cookie');
+              authed = true;
+            }
           }
+        } catch {}
+
+        if (!authed && storedToken) {
+          try {
+            const resp2 = await fetch(ADMIN_API.profile, {
+              headers: { Authorization: `Bearer ${storedToken}` },
+              credentials: 'include',
+            });
+            if (resp2.ok) {
+              const data2 = await resp2.json();
+              if (data2?.success && data2?.user) {
+                setAdminUser(data2.user);
+                setIsAuthenticated(true);
+                setToken(storedToken);
+                authed = true;
+              }
+            }
+          } catch {}
         }
       } catch (error) {
         console.error('Authentication error:', error);
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminUser');
       } finally {
         setLoading(false);
       }
@@ -80,16 +95,16 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, []);
 
   // Login
-  const login = (newToken: string, user: AdminUser) => {
+  const login = (_newToken: string, user: AdminUser) => {
     try {
-      // Store authentication data in localStorage
-      localStorage.setItem('adminToken', newToken);
-      localStorage.setItem('adminUser', JSON.stringify(user));
-      
       // Update state
-      setToken(newToken);
+      setToken(_newToken);
       setAdminUser(user);
       setIsAuthenticated(true);
+      // Persist token only for this session as a Bearer fallback
+      if (typeof window !== 'undefined' && _newToken) {
+        window.sessionStorage.setItem('adm_token', _newToken);
+      }
       
       console.log('Login successful, authentication state updated', { user });
     } catch (error) {
@@ -100,25 +115,16 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
   // Logout
   const logout = async () => {
     try {
-      // Call the logout endpoint if we have a token
-      if (token) {
-        await fetch(ADMIN_API.logout, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-      }
+  await fetch(ADMIN_API.logout, { method: 'POST', credentials: 'include' });
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Clear local storage and state regardless of API success
-      localStorage.removeItem('adminToken');
-      localStorage.removeItem('adminUser');
       setToken(null);
       setAdminUser(null);
       setIsAuthenticated(false);
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.removeItem('adm_token');
+      }
     }
   };
   
@@ -166,33 +172,34 @@ export const withAdminAuth = <P extends object>(Component: React.ComponentType<P
   const ProtectedRoute: React.FC<P> = (props) => {
     const { isAuthenticated, loading } = useAdminAuth();
     const [redirecting, setRedirecting] = useState(false);
+    const didRedirectRef = React.useRef(false);
     
     useEffect(() => {
       // Always require authentication - no bypass
       // If not loading and not authenticated, redirect
-      if (!loading && !isAuthenticated) {
+      if (!loading && !isAuthenticated && !didRedirectRef.current) {
+        didRedirectRef.current = true;
         console.log('User not authenticated, redirecting to login...');
         setRedirecting(true);
-        // Add small delay to prevent immediate redirection that might interfere with auth process
-        setTimeout(() => {
-          const baseUrl = window.location.origin;
-          window.location.href = `${baseUrl}/admin/login`;
-          console.log(`Redirecting to login: ${baseUrl}/admin/login`);
-        }, 200);
+        // use replace to avoid back-button loops
+        const baseUrl = window.location.origin;
+        window.location.replace(`${baseUrl}/admin/login`);
       } else if (!loading && isAuthenticated) {
         // Log when authenticated to help with debugging
         console.log('User is authenticated, rendering protected component');
       }
     }, [loading, isAuthenticated]);
     
-    // Show loading or render protected component
-    if (loading || redirecting) {
+    // Show loading when checking auth
+    if (loading) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-[#83C5BE]">
           <div className="text-white text-xl">Loading...</div>
         </div>
       );
     }
+    // If redirecting, render nothing to avoid flicker
+    if (redirecting) return null;
     
     return isAuthenticated ? <Component {...props} /> : null;
   };

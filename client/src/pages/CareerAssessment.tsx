@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import jsPDF from 'jspdf';
+import { buildApiUrl } from '@/config/api';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +12,9 @@ import SrichakraText from '@/components/custom/SrichakraText';
 import sriYantraLogo from '../assets/images/logo/sri-yantra.png';
 
 const CareerAssessmentPage = () => {
-  const [user, setUser] = useState<any>(null);
+  // Allow guest access (no login required) specifically for Career Assessment
+  const CAREER_ASSESSMENT_PAUSED = false;
+  const [user, setUser] = useState<any>({ email: 'guest@local', fullName: 'Guest User', isGuest: true });
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [isCompleted, setIsCompleted] = useState(false);
@@ -18,6 +22,8 @@ const CareerAssessmentPage = () => {
     finalScores: { domain: string; score: number; count: number }[];
     totalAnswered: number;
   } | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   // Sample questions from your assessment logic
   const questions = [
@@ -93,23 +99,18 @@ const CareerAssessmentPage = () => {
   ];
 
   useEffect(() => {
-    // Authentication is required - but browser will save credentials for return visits
+    if (CAREER_ASSESSMENT_PAUSED) return;
     const userSession = getUserSession();
-    
     if (userSession) {
-      // User has a saved session - they can proceed
       setUser({
         email: userSession.email || 'user@srichakra.com',
-        fullName: userSession.name || userSession.email?.split('@')[0] || 'User'
+        fullName: userSession.name || userSession.email?.split('@')[0] || 'User',
+        isGuest: false,
       });
-      // Track registered user activity
       trackUserActivity('activity', userSession);
     } else {
-      // No session found - redirect to login with return URL
-      // Browser will offer to save credentials during login
-      const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
-      window.location.href = `/login?returnUrl=${returnUrl}`;
-      return;
+      // Guest mode: allow taking the assessment without login
+      setUser({ email: 'guest@local', fullName: 'Guest User', isGuest: true });
     }
   }, []);
 
@@ -158,8 +159,10 @@ const CareerAssessmentPage = () => {
     const reportData = { finalScores, totalAnswered: Object.keys(answers).length };
     setReport(reportData);
     
-    // Save assessment results and update user status
-    saveAssessmentResults(reportData);
+  // Save assessment results and update user status
+  saveAssessmentResults(reportData);
+  // Generate and upload PDF (non-blocking)
+  generateAndUploadPdf(reportData).catch(() => {});
   };
 
   const saveAssessmentResults = (reportData: any) => {
@@ -167,7 +170,7 @@ const CareerAssessmentPage = () => {
 
     const assessmentResult = {
       userId: user.email,
-      studentName: user.name || user.email.split('@')[0],
+  studentName: user.fullName || user.email.split('@')[0],
       completedAt: new Date().toISOString(),
       results: reportData,
       answers: answers,
@@ -175,74 +178,134 @@ const CareerAssessmentPage = () => {
       status: 'completed'
     };
 
-    // Save to assessment results storage
-    const existingResults = JSON.parse(localStorage.getItem('assessmentResults') || '[]');
-    const filteredResults = existingResults.filter((r: any) => r.userId !== user.email);
-    filteredResults.push(assessmentResult);
-    localStorage.setItem('assessmentResults', JSON.stringify(filteredResults));
+  // Send to server later when endpoint exists; for now, rely on PDF upload persistence
+  console.log('Assessment completed; PDF will be persisted.');
+  };
 
-    // Update user's assessment status in registered users
-    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    const updatedUsers = registeredUsers.map((u: any) => {
-      if (u.email === user.email) {
-        return { ...u, hasAssessment: true, assessmentStatus: 'completed', lastActivity: new Date().toISOString() };
+  // Generate a compact PDF and upload to Supabase via API
+  const generateAndUploadPdf = async (reportData: any) => {
+    try {
+      if (!user) return;
+      // In guest mode we don't upload to the server; user can still use the Download button
+      if (user.isGuest) {
+        return;
       }
-      return u;
-    });
-    localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
+      setSaving(true);
+      const doc = new jsPDF();
+      doc.setFontSize(16);
+      doc.text('Srichakra Career Assessment Report', 14, 20);
+      doc.setFontSize(12);
+      doc.text(`Student: ${user.fullName || user.email}`, 14, 30);
+      doc.text(`Email: ${user.email}`, 14, 36);
+      doc.text(`Completed: ${new Date().toLocaleString()}`, 14, 42);
+      doc.text('Top Domains:', 14, 54);
+      const top = reportData.finalScores.slice(0, 5);
+      top.forEach((t: any, i: number) => {
+        doc.text(`${i + 1}. ${t.domain}: ${t.score.toFixed(2)}`, 20, 64 + i * 8);
+      });
+      let y = 64 + top.length * 8 + 6;
+      doc.text('All Domains:', 14, y);
+      y += 6;
+      reportData.finalScores.forEach((t: any) => {
+        if (y > 280) { doc.addPage(); y = 20; }
+        doc.text(`${t.domain}: ${t.score.toFixed(2)} (${t.count})`, 20, y);
+        y += 6;
+      });
 
-    // Update school students if user is associated with a school
-    const schoolStudents = JSON.parse(localStorage.getItem('schoolStudents') || '[]');
-    const updatedSchoolStudents = schoolStudents.map((s: any) => {
-      if (s.email === user.email || (s.studentName === user.name && s.phone === user.phone)) {
-        return { ...s, assessmentStatus: 'completed', completedAt: new Date().toISOString() };
+      const pdfBase64 = doc.output('datauristring').split(',')[1];
+      const filename = `reports/${user.email}/${Date.now()}-career-report.pdf`;
+      const res = await fetch(buildApiUrl('/pdfs/upload'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ bucket: 'student-pdfs', path: filename, contentBase64: pdfBase64, contentType: 'application/pdf', upsert: true, userEmail: user.email })
+      });
+      const data = await res.json();
+      if (data?.success) {
+        const urlRes = await fetch(buildApiUrl(`/pdfs/signed-url?bucket=student-pdfs&path=${encodeURIComponent(filename)}&expiresIn=604800`), { credentials: 'include' });
+        const urlData = await urlRes.json();
+        if (urlData?.success && urlData.url) setPdfUrl(urlData.url);
       }
-      return s;
-    });
-    localStorage.setItem('schoolStudents', JSON.stringify(updatedSchoolStudents));
+    } catch (e) {
+      console.log('PDF upload failed', e);
+    } finally {
+      setSaving(false);
+    }
+  };
 
-    console.log('Assessment results saved successfully');
+  const generateSamplePDF = () => {
+    // Create sample data for demonstration
+    const sampleReport = {
+      finalScores: [
+        { domain: 'Analytical', score: 4.2, count: 8 },
+        { domain: 'Technical', score: 3.8, count: 7 },
+        { domain: 'Social', score: 3.5, count: 6 },
+        { domain: 'Creative', score: 3.2, count: 5 },
+        { domain: 'Verbal', score: 3.0, count: 6 },
+        { domain: 'Musical', score: 2.8, count: 4 },
+        { domain: 'Naturalistic', score: 2.5, count: 3 },
+        { domain: 'General', score: 3.6, count: 12 }
+      ],
+      totalAnswered: 51
+    };
+    
+    generatePDFWithData(sampleReport, true);
   };
 
   const downloadPDF = () => {
     if (!report) return;
-    
-    const { finalScores, totalAnswered } = report;
+    generatePDFWithData(report, false);
+  };
+
+  const generatePDFWithData = (reportData: any, isSample: boolean = false) => {
+    const { finalScores, totalAnswered } = reportData;
     const maxScore = Math.max(...finalScores.map(s => s.score));
     
-    // Generate bar chart data
+    // Generate bar chart data with improved spacing and labels
     const barChartSVG = finalScores.map((score, index) => {
       const percentage = (score.score / 5) * 100; // Convert to percentage (max score is 5)
       const colors = ['#006D77', '#83C5BE', '#FFDDD2', '#E29578', '#5390D9', '#7209B7', '#F72585', '#4CC9F0'];
+      const yPosition = index * 50 + 50; // Increased spacing between bars
       return `
         <g>
-          <rect x="50" y="${index * 40 + 20}" width="${percentage * 3}" height="30" fill="${colors[index % colors.length]}" rx="5"/>
-          <text x="60" y="${index * 40 + 40}" fill="white" font-size="14" font-weight="bold">${score.domain}</text>
-          <text x="${percentage * 3 + 60}" y="${index * 40 + 40}" fill="#333" font-size="12">${score.score.toFixed(1)}</text>
+          <rect x="80" y="${yPosition}" width="${percentage * 3}" height="35" fill="${colors[index % colors.length]}" rx="8"/>
+          <text x="90" y="${yPosition + 23}" fill="white" font-size="13" font-weight="bold">${score.domain}</text>
+          <text x="${percentage * 3 + 90}" y="${yPosition + 23}" fill="#333" font-size="12" font-weight="bold">${score.score.toFixed(1)}/5.0</text>
+          <text x="70" y="${yPosition + 23}" fill="#666" font-size="11" text-anchor="end">${index + 1}.</text>
         </g>
       `;
     }).join('');
 
-    // Generate pie chart data
+    // Generate pie chart data with better positioning
     const total = finalScores.reduce((sum, s) => sum + s.score, 0);
     let currentAngle = 0;
     const pieSlices = finalScores.map((score, index) => {
       const percentage = (score.score / total) * 100;
       const angle = (score.score / total) * 360;
-      const x1 = 150 + 120 * Math.cos((currentAngle * Math.PI) / 180);
-      const y1 = 150 + 120 * Math.sin((currentAngle * Math.PI) / 180);
-      const x2 = 150 + 120 * Math.cos(((currentAngle + angle) * Math.PI) / 180);
-      const y2 = 150 + 120 * Math.sin(((currentAngle + angle) * Math.PI) / 180);
+      const centerX = 160, centerY = 160, radius = 130;
+      const x1 = centerX + radius * Math.cos((currentAngle * Math.PI) / 180);
+      const y1 = centerY + radius * Math.sin((currentAngle * Math.PI) / 180);
+      const x2 = centerX + radius * Math.cos(((currentAngle + angle) * Math.PI) / 180);
+      const y2 = centerY + radius * Math.sin(((currentAngle + angle) * Math.PI) / 180);
       const largeArc = angle > 180 ? 1 : 0;
       const colors = ['#006D77', '#83C5BE', '#FFDDD2', '#E29578', '#5390D9', '#7209B7', '#F72585', '#4CC9F0'];
       
+      // Calculate label position
+      const labelAngle = currentAngle + angle/2;
+      const labelRadius = radius + 20;
+      const labelX = centerX + labelRadius * Math.cos((labelAngle * Math.PI) / 180);
+      const labelY = centerY + labelRadius * Math.sin((labelAngle * Math.PI) / 180);
+      
       const slice = `
-        <path d="M 150 150 L ${x1} ${y1} A 120 120 0 ${largeArc} 1 ${x2} ${y2} Z" 
-              fill="${colors[index % colors.length]}" stroke="white" stroke-width="2"/>
-        <text x="${150 + 140 * Math.cos(((currentAngle + angle/2) * Math.PI) / 180)}" 
-              y="${150 + 140 * Math.sin(((currentAngle + angle/2) * Math.PI) / 180)}" 
+        <path d="M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z" 
+              fill="${colors[index % colors.length]}" stroke="white" stroke-width="3"/>
+        <text x="${labelX}" y="${labelY}" 
               text-anchor="middle" fill="#333" font-size="11" font-weight="bold">
-          ${score.domain.length > 8 ? score.domain.substring(0,8)+'...' : score.domain}
+          ${score.domain.length > 10 ? score.domain.substring(0,8)+'...' : score.domain}
+        </text>
+        <text x="${labelX}" y="${labelY + 12}" 
+              text-anchor="middle" fill="#666" font-size="9">
+          ${score.score.toFixed(1)}
         </text>
       `;
       currentAngle += angle;
@@ -283,7 +346,7 @@ const CareerAssessmentPage = () => {
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>Srichakra Career Assessment Report</title>
+          <title>Srichakra Career Assessment Report${isSample ? ' - Sample' : ''}</title>
           <style>
             body { 
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -400,9 +463,10 @@ const CareerAssessmentPage = () => {
           <div class="page">
             <div class="header">
               <div class="logo">SY</div>
-              <h1>Career Assessment Report</h1>
+              <h1>Career Assessment Report${isSample ? ' - SAMPLE REPORT' : ''}</h1>
               <p style="font-size: 1.2em; color: #666;">Srichakra Academy - The School To identify Your Child's Divine Gift!!</p>
               <p style="color: #83C5BE; font-size: 1.1em;">Comprehensive Psychometric Analysis</p>
+              ${isSample ? '<p style="color: #E29578; font-size: 1em; font-weight: bold; background: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0;">🔍 This is a sample report showing the layout and format. Complete the assessment to get your personalized results.</p>' : ''}
             </div>
             
             <div class="summary-stats">
@@ -454,35 +518,57 @@ const CareerAssessmentPage = () => {
             </div>
 
             <h2>Domain Scores Breakdown</h2>
-            <div class="chart-container">
-              <h3>Bar Chart Analysis</h3>
-              <svg width="100%" height="${finalScores.length * 40 + 60}" viewBox="0 0 600 ${finalScores.length * 40 + 60}">
+            <div style="background: #f8f9fa; padding: 30px; border-radius: 15px; margin: 20px 0; border: 1px solid #e9ecef;">
+              <div style="display: flex; align-items: center; margin-bottom: 25px;">
+                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #006D77, #83C5BE); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px;">
+                  <span style="color: white; font-size: 1.5em; font-weight: bold;">📊</span>
+                </div>
+                <div>
+                  <h3 style="margin: 0; color: #006D77; font-size: 1.3em;">Your Aptitude Scores Analysis</h3>
+                  <p style="margin: 5px 0 0 0; color: #666; font-size: 1em;">Detailed breakdown of your strengths across different domains (Scale: 1-5)</p>
+                </div>
+              </div>
+              <svg width="100%" height="${finalScores.length * 50 + 80}" viewBox="0 0 650 ${finalScores.length * 50 + 80}" style="background: white; border-radius: 10px; padding: 10px;">
                 <defs>
                   <linearGradient id="barGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" style="stop-color:#006D77;stop-opacity:1" />
                     <stop offset="100%" style="stop-color:#83C5BE;stop-opacity:1" />
                   </linearGradient>
                 </defs>
-                <text x="300" y="20" text-anchor="middle" font-size="16" font-weight="bold" fill="#006D77">
-                  Your Aptitude Scores (Scale: 1-5)
+                <text x="325" y="25" text-anchor="middle" font-size="16" font-weight="bold" fill="#006D77">
+                  Your Aptitude Profile
                 </text>
                 ${barChartSVG}
-                <line x1="350" y1="30" x2="350" y2="${finalScores.length * 40 + 40}" stroke="#ddd" stroke-width="1"/>
-                <text x="355" y="35" font-size="10" fill="#666">Average (3.0)</text>
+                <line x1="380" y1="40" x2="380" y2="${finalScores.length * 50 + 50}" stroke="#ddd" stroke-width="2"/>
+                <text x="385" y="45" font-size="12" fill="#666">Average (3.0)</text>
+                <text x="50" y="${finalScores.length * 50 + 70}" font-size="10" fill="#888">💡 Higher scores indicate stronger natural aptitudes in those areas</text>
               </svg>
             </div>
 
-            <div class="chart-container">
-              <h3>Pie Chart Distribution</h3>
-              <svg width="100%" height="320" viewBox="0 0 300 320">
-                <text x="150" y="20" text-anchor="middle" font-size="16" font-weight="bold" fill="#006D77">
-                  Domain Distribution
-                </text>
-                ${pieSlices}
-                <circle cx="150" cy="150" r="40" fill="white" stroke="#006D77" stroke-width="3"/>
-                <text x="150" y="155" text-anchor="middle" font-size="14" font-weight="bold" fill="#006D77">Total</text>
-                <text x="150" y="170" text-anchor="middle" font-size="12" fill="#666">${total.toFixed(1)}</text>
-              </svg>
+            <div style="background: #f8f9fa; padding: 30px; border-radius: 15px; margin: 20px 0; border: 1px solid #e9ecef;">
+              <div style="display: flex; align-items: center; margin-bottom: 25px;">
+                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #E29578, #FFDDD2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px;">
+                  <span style="color: white; font-size: 1.5em; font-weight: bold;">🍰</span>
+                </div>
+                <div>
+                  <h3 style="margin: 0; color: #006D77; font-size: 1.3em;">Domain Distribution Overview</h3>
+                  <p style="margin: 5px 0 0 0; color: #666; font-size: 1em;">Visual representation of how your abilities are distributed across different areas</p>
+                </div>
+              </div>
+              <div style="background: white; border-radius: 10px; padding: 20px; display: flex; align-items: center; gap: 20px;">
+                <div style="flex: 0 0 auto; text-align: left;">
+                  <h3 style="margin: 0 0 10px 0; color: #006D77; font-size: 18px; font-weight: bold;">Your Talent Distribution</h3>
+                  <p style="margin: 0; color: #666; font-size: 12px; max-width: 150px; line-height: 1.4;">💡 Larger sections represent your strongest talent areas</p>
+                </div>
+                <div style="flex: 1; text-align: center;">
+                  <svg width="320" height="320" viewBox="0 0 320 320">
+                    ${pieSlices.replace(/cx="175"/g, 'cx="160"').replace(/cy="180"/g, 'cy="160"')}
+                    <circle cx="160" cy="160" r="45" fill="white" stroke="#006D77" stroke-width="3"/>
+                    <text x="160" y="155" text-anchor="middle" font-size="14" font-weight="bold" fill="#006D77">Total</text>
+                    <text x="160" y="170" text-anchor="middle" font-size="12" fill="#666">${total.toFixed(1)}</text>
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -492,40 +578,62 @@ const CareerAssessmentPage = () => {
               <h1>Brain Hemisphere Analysis</h1>
             </div>
 
-            <div class="brain-diagram">
-              <div class="brain-half left-brain">
-                <h3>Left Brain (${leftBrainScore.toFixed(1)}/5.0)</h3>
-                <p><strong>Logical • Analytical • Sequential</strong></p>
-                <ul style="text-align: left;">
-                  <li>Mathematical thinking</li>
-                  <li>Verbal processing</li>
-                  <li>Linear reasoning</li>
-                  <li>Detail-oriented</li>
-                  <li>Structured approach</li>
-                </ul>
-                <div style="margin-top: 15px;">
-                  <strong>Your Scores:</strong><br>
-                  ${finalScores.filter(s => leftBrainDomains.includes(s.domain)).map(s => 
-                    `${s.domain}: ${s.score.toFixed(1)}`
-                  ).join('<br>')}
+            <div style="margin: 30px 0;">
+              <!-- Left Brain Analysis -->
+              <div style="display: flex; align-items: flex-start; margin: 25px 0; padding: 25px; background: linear-gradient(135deg, #2c5282, #553c9a); border-radius: 15px; color: white;">
+                <div style="width: 120px; height: 120px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 25px; flex-shrink: 0; border: 3px solid rgba(255,255,255,0.3);">
+                  <div style="text-align: center;">
+                    <div style="font-size: 2.5em; margin-bottom: 5px;">🧠</div>
+                    <div style="font-size: 0.8em; font-weight: bold;">LEFT</div>
+                  </div>
+                </div>
+                <div style="flex: 1;">
+                  <h3 style="margin: 0 0 15px 0; font-size: 1.5em;">Left Brain Dominance (${leftBrainScore.toFixed(1)}/5.0)</h3>
+                  <p style="margin: 0 0 15px 0; font-size: 1.1em; line-height: 1.6;">
+                    <strong>Characteristics:</strong> Logical • Analytical • Sequential • Detail-oriented
+                  </p>
+                  <div style="background: rgba(255,255,255,0.15); padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <p style="margin: 0 0 10px 0; font-weight: bold;">Why Left Brain Matters:</p>
+                    <p style="margin: 0; line-height: 1.5;">
+                      Left brain dominance indicates strength in mathematical thinking, verbal processing, linear reasoning, and structured approaches. 
+                      People with left brain dominance excel in careers requiring systematic analysis, clear communication, and logical problem-solving.
+                    </p>
+                  </div>
+                  <div style="margin-top: 15px;">
+                    <strong>Your Left Brain Scores:</strong><br>
+                    ${finalScores.filter(s => leftBrainDomains.includes(s.domain)).map(s => 
+                      `<span style="display: inline-block; background: rgba(255,255,255,0.25); padding: 5px 10px; border-radius: 15px; margin: 3px 5px 3px 0; font-size: 0.9em;">${s.domain}: ${s.score.toFixed(1)}</span>`
+                    ).join('')}
+                  </div>
                 </div>
               </div>
               
-              <div class="brain-half right-brain">
-                <h3>Right Brain (${rightBrainScore.toFixed(1)}/5.0)</h3>
-                <p><strong>Creative • Intuitive • Holistic</strong></p>
-                <ul style="text-align: left;">
-                  <li>Visual-spatial thinking</li>
-                  <li>Creative expression</li>
-                  <li>Pattern recognition</li>
-                  <li>Artistic abilities</li>
-                  <li>Imaginative approach</li>
-                </ul>
-                <div style="margin-top: 15px;">
-                  <strong>Your Scores:</strong><br>
-                  ${finalScores.filter(s => rightBrainDomains.includes(s.domain)).map(s => 
-                    `${s.domain}: ${s.score.toFixed(1)}`
-                  ).join('<br>')}
+              <!-- Right Brain Analysis -->
+              <div style="display: flex; align-items: flex-start; margin: 25px 0; padding: 25px; background: linear-gradient(135deg, #b83280, #2980b9); border-radius: 15px; color: white;">
+                <div style="width: 120px; height: 120px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 25px; flex-shrink: 0; border: 3px solid rgba(255,255,255,0.3);">
+                  <div style="text-align: center;">
+                    <div style="font-size: 2.5em; margin-bottom: 5px;">🎨</div>
+                    <div style="font-size: 0.8em; font-weight: bold;">RIGHT</div>
+                  </div>
+                </div>
+                <div style="flex: 1;">
+                  <h3 style="margin: 0 0 15px 0; font-size: 1.5em;">Right Brain Dominance (${rightBrainScore.toFixed(1)}/5.0)</h3>
+                  <p style="margin: 0 0 15px 0; font-size: 1.1em; line-height: 1.6;">
+                    <strong>Characteristics:</strong> Creative • Intuitive • Holistic • Artistic
+                  </p>
+                  <div style="background: rgba(255,255,255,0.15); padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <p style="margin: 0 0 10px 0; font-weight: bold;">Why Right Brain Matters:</p>
+                    <p style="margin: 0; line-height: 1.5;">
+                      Right brain dominance indicates strength in visual-spatial thinking, creative expression, pattern recognition, and imaginative approaches. 
+                      People with right brain dominance excel in careers requiring innovation, artistic vision, and holistic problem-solving.
+                    </p>
+                  </div>
+                  <div style="margin-top: 15px;">
+                    <strong>Your Right Brain Scores:</strong><br>
+                    ${finalScores.filter(s => rightBrainDomains.includes(s.domain)).map(s => 
+                      `<span style="display: inline-block; background: rgba(255,255,255,0.25); padding: 5px 10px; border-radius: 15px; margin: 3px 5px 3px 0; font-size: 0.9em;">${s.domain}: ${s.score.toFixed(1)}</span>`
+                    ).join('')}
+                  </div>
                 </div>
               </div>
             </div>
@@ -541,26 +649,75 @@ const CareerAssessmentPage = () => {
             </div>
 
             <h2>Five Senses Learning Profile</h2>
-            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin: 20px 0;">
-              <div class="career-item" style="background: linear-gradient(135deg, #FF6B6B, #4ECDC4);">
-                <h4 style="color: white; margin: 0;">👁️ Visual</h4>
-                <p style="color: white; font-size: 0.9em;">Charts, diagrams, colors</p>
+            <div style="margin: 30px 0;">
+              <!-- Visual Learning Style -->
+              <div style="display: flex; align-items: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #FF6B6B;">
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #FF6B6B, #4ECDC4); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; flex-shrink: 0;">
+                  <span style="font-size: 2em;">👁️</span>
+                </div>
+                <div style="flex: 1;">
+                  <h3 style="color: #FF6B6B; margin: 0 0 8px 0;">Visual Learning Style</h3>
+                  <p style="margin: 0; line-height: 1.5; color: #555;">
+                    <strong>Preference:</strong> Charts, diagrams, colors, images, and visual representations.<br>
+                    <strong>Why it matters:</strong> Visual learners process information best through seeing. They benefit from mind maps, infographics, and color-coded materials. This learning style is crucial for careers in design, architecture, and data visualization.
+                  </p>
+                </div>
               </div>
-              <div class="career-item" style="background: linear-gradient(135deg, #45B7D1, #96CEB4);">
-                <h4 style="color: white; margin: 0;">👂 Auditory</h4>
-                <p style="color: white; font-size: 0.9em;">Discussions, music, sounds</p>
+
+              <!-- Auditory Learning Style -->
+              <div style="display: flex; align-items: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #45B7D1;">
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #45B7D1, #96CEB4); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; flex-shrink: 0;">
+                  <span style="font-size: 2em;">👂</span>
+                </div>
+                <div style="flex: 1;">
+                  <h3 style="color: #45B7D1; margin: 0 0 8px 0;">Auditory Learning Style</h3>
+                  <p style="margin: 0; line-height: 1.5; color: #555;">
+                    <strong>Preference:</strong> Discussions, music, sounds, verbal instructions, and listening.<br>
+                    <strong>Why it matters:</strong> Auditory learners excel through hearing and speaking. They benefit from lectures, group discussions, and audio materials. This style supports careers in teaching, counseling, music, and public speaking.
+                  </p>
+                </div>
               </div>
-              <div class="career-item" style="background: linear-gradient(135deg, #F39C12, #E67E22);">
-                <h4 style="color: white; margin: 0;">✋ Kinesthetic</h4>
-                <p style="color: white; font-size: 0.9em;">Hands-on, movement</p>
+
+              <!-- Kinesthetic Learning Style -->
+              <div style="display: flex; align-items: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #F39C12;">
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #F39C12, #E67E22); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; flex-shrink: 0;">
+                  <span style="font-size: 2em;">✋</span>
+                </div>
+                <div style="flex: 1;">
+                  <h3 style="color: #F39C12; margin: 0 0 8px 0;">Kinesthetic Learning Style</h3>
+                  <p style="margin: 0; line-height: 1.5; color: #555;">
+                    <strong>Preference:</strong> Hands-on activities, movement, physical manipulation, and learning by doing.<br>
+                    <strong>Why it matters:</strong> Kinesthetic learners need physical interaction with materials. They excel in lab work, sports, crafts, and practical applications. This style suits careers in engineering, healthcare, sports, and trades.
+                  </p>
+                </div>
               </div>
-              <div class="career-item" style="background: linear-gradient(135deg, #9B59B6, #8E44AD);">
-                <h4 style="color: white; margin: 0;">👃 Olfactory</h4>
-                <p style="color: white; font-size: 0.9em;">Scents, environment</p>
+
+              <!-- Olfactory Learning Style -->
+              <div style="display: flex; align-items: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #9B59B6;">
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #9B59B6, #8E44AD); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; flex-shrink: 0;">
+                  <span style="font-size: 2em;">👃</span>
+                </div>
+                <div style="flex: 1;">
+                  <h3 style="color: #9B59B6; margin: 0 0 8px 0;">Olfactory Learning Style</h3>
+                  <p style="margin: 0; line-height: 1.5; color: #555;">
+                    <strong>Preference:</strong> Scents, environmental cues, and smell-based memory associations.<br>
+                    <strong>Why it matters:</strong> Olfactory learners have strong scent-memory connections and environmental awareness. They often excel in chemistry, perfumery, culinary arts, and nature-based careers where scent plays a role.
+                  </p>
+                </div>
               </div>
-              <div class="career-item" style="background: linear-gradient(135deg, #E74C3C, #C0392B);">
-                <h4 style="color: white; margin: 0;">👅 Gustatory</h4>
-                <p style="color: white; font-size: 0.9em;">Taste, experiential</p>
+
+              <!-- Gustatory Learning Style -->
+              <div style="display: flex; align-items: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #E74C3C;">
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #E74C3C, #C0392B); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; flex-shrink: 0;">
+                  <span style="font-size: 2em;">👅</span>
+                </div>
+                <div style="flex: 1;">
+                  <h3 style="color: #E74C3C; margin: 0 0 8px 0;">Gustatory Learning Style</h3>
+                  <p style="margin: 0; line-height: 1.5; color: #555;">
+                    <strong>Preference:</strong> Taste, experiential learning, and flavor-based memory formation.<br>
+                    <strong>Why it matters:</strong> Gustatory learners connect learning with taste experiences and hands-on exploration. They often succeed in culinary arts, food science, hospitality, and careers involving sensory evaluation.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -576,23 +733,67 @@ const CareerAssessmentPage = () => {
               Based on your top domain scores, here are career suggestions aligned with your natural strengths:
             </p>
 
-            ${topDomains.map((domain, index) => `
-              <div class="recommendations" style="margin: 25px 0;">
-                <h3 style="color: #006D77; margin-top: 0;">
-                  ${index + 1}. ${domain.domain} Careers (Score: ${domain.score.toFixed(1)}/5.0)
-                </h3>
-                <div class="career-grid">
-                  ${(careerSuggestions[domain.domain as keyof typeof careerSuggestions] || ['General roles']).map((career: string) => 
-                    `<div class="career-item">
-                      <strong>${career}</strong>
-                      <p style="font-size: 0.9em; color: #666; margin: 5px 0 0 0;">
-                        High ${domain.domain.toLowerCase()} aptitude required
-                      </p>
-                    </div>`
-                  ).join('')}
+            ${topDomains.map((domain, index) => {
+              const domainIcons = {
+                'Analytical': '📊',
+                'Verbal': '📝',
+                'Creative': '🎨',
+                'Technical': '⚙️',
+                'Social': '👥',
+                'Musical': '🎵',
+                'Naturalistic': '🌿',
+                'General': '⭐'
+              };
+              const domainColors = {
+                'Analytical': '#004d57',
+                'Verbal': '#2d5a5e',
+                'Creative': '#b85c42',
+                'Technical': '#3a6bb8',
+                'Social': '#4a1458',
+                'Musical': '#b8185c',
+                'Naturalistic': '#2980b9',
+                'General': '#d4822a'
+              };
+              const domainReasons = {
+                'Analytical': 'Your high analytical score indicates strong logical reasoning, problem-solving abilities, and comfort with data analysis. These skills are essential for making informed decisions and understanding complex systems.',
+                'Verbal': 'Your verbal strength shows excellent communication skills, language proficiency, and ability to express ideas clearly. This is crucial for leadership, teaching, and client-facing roles.',
+                'Creative': 'Your creative aptitude demonstrates innovative thinking, artistic vision, and ability to generate original solutions. This skill set is valuable for design, marketing, and problem-solving roles.',
+                'Technical': 'Your technical competency shows aptitude for understanding systems, working with tools/technology, and hands-on problem solving. This is essential for engineering and technical fields.',
+                'Social': 'Your social intelligence indicates strong interpersonal skills, empathy, and ability to work effectively with others. This is vital for roles involving teamwork and human interaction.',
+                'Musical': 'Your musical abilities show pattern recognition, rhythm sensitivity, and auditory processing skills. These talents can enhance creativity and structure in various career paths.',
+                'Naturalistic': 'Your naturalistic intelligence demonstrates environmental awareness, pattern recognition in nature, and systematic thinking. This supports careers in science and environmental fields.',
+                'General': 'Your general aptitude shows well-rounded abilities and adaptability across multiple areas. This versatility allows flexibility in career choices and management roles.'
+              };
+              
+              return `
+              <div style="margin: 30px 0; padding: 25px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 15px; border-left: 5px solid ${domainColors[domain.domain as keyof typeof domainColors] || '#006D77'};">
+                <div style="display: flex; align-items: flex-start; margin-bottom: 20px;">
+                  <div style="width: 80px; height: 80px; background: ${domainColors[domain.domain as keyof typeof domainColors] || '#006D77'}; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; flex-shrink: 0; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    <span style="font-size: 2.2em;">${domainIcons[domain.domain as keyof typeof domainIcons] || '⭐'}</span>
+                  </div>
+                  <div style="flex: 1;">
+                    <h3 style="color: ${domainColors[domain.domain as keyof typeof domainColors] || '#006D77'}; margin: 0 0 10px 0; font-size: 1.4em;">
+                      ${index + 1}. ${domain.domain} Careers (Score: ${domain.score.toFixed(1)}/5.0)
+                    </h3>
+                    <p style="margin: 0 0 15px 0; line-height: 1.6; color: #555; font-size: 1em;">
+                      <strong>Why this matters for you:</strong> ${domainReasons[domain.domain as keyof typeof domainReasons] || 'This area represents one of your key strengths and natural talents.'}
+                    </p>
+                  </div>
+                </div>
+                
+                  <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                  <h4 style="margin: 0 0 15px 0; color: #333; font-size: 1.1em;">Recommended Career Paths:</h4>
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
+                    ${(careerSuggestions[domain.domain as keyof typeof careerSuggestions] || ['General roles']).map((career: string) => 
+                      `<div style="background: linear-gradient(135deg, ${domainColors[domain.domain as keyof typeof domainColors] || '#004d57'}, ${domainColors[domain.domain as keyof typeof domainColors] || '#004d57'}dd); color: white; padding: 18px; border-radius: 8px; text-align: center; box-shadow: 0 3px 12px rgba(0,0,0,0.2);">
+                        <div style="font-weight: bold; font-size: 1.1em; margin-bottom: 8px;">${career}</div>
+                        <div style="font-size: 0.85em; opacity: 0.95;">High ${domain.domain.toLowerCase()} aptitude required</div>
+                      </div>`
+                    ).join('')}
+                  </div>
                 </div>
               </div>
-            `).join('')}
+            `}).join('')}
 
             <h2>Next Steps & Recommendations</h2>
             <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; border-left: 5px solid #006D77;">
@@ -606,10 +807,19 @@ const CareerAssessmentPage = () => {
               </ol>
             </div>
 
-            <div style="margin-top: 40px; text-align: center; padding: 20px; background: linear-gradient(135deg, #83C5BE, #006D77); border-radius: 15px; color: white;">
-              <h3 style="margin: 0 0 10px 0;">Thank You for Taking the Assessment</h3>
-              <p style="margin: 0; opacity: 0.9;">This report is generated by Srichakra Academy's comprehensive career assessment system.</p>
-              <p style="margin: 5px 0 0 0; font-size: 0.9em; opacity: 0.8;">For questions or consultation, contact us through our website.</p>
+            <div style="margin-top: 40px; display: flex; align-items: center; justify-content: space-between; padding: 25px; background: linear-gradient(135deg, #004d57, #2d5a5e); border-radius: 15px; color: white;">
+              <div style="flex: 1;">
+                <h3 style="margin: 0 0 10px 0;">Thank You for Taking the Assessment</h3>
+                <p style="margin: 0 0 10px 0; opacity: 0.9;">This report is generated by Srichakra Academy's comprehensive career assessment system.</p>
+                <p style="margin: 0; font-size: 0.9em; opacity: 0.8;">For questions or consultation, contact us through our website.</p>
+                <div style="margin-top: 15px;">
+                  <strong style="font-size: 1.1em;">🌐 Visit: srichakraacademy.org</strong>
+                </div>
+              </div>
+              <div style="margin-left: 30px; text-align: center; background: white; padding: 20px; border-radius: 12px;">
+                <div style="font-size: 12px; color: #666; font-weight: bold; margin-bottom: 8px;">🌐 srichakraacademy.org</div>
+                <div style="font-size: 12px; color: #666; font-weight: bold;">📞 +91-98430 30697</div>
+              </div>
             </div>
           </div>
 
@@ -624,6 +834,8 @@ const CareerAssessmentPage = () => {
   };
 
   const progress = ((currentStep + 1) / questions.length) * 100;
+
+  // If a maintenance window is desired later, toggle CAREER_ASSESSMENT_PAUSED back to true.
 
   if (!user) {
     return (
@@ -707,6 +919,20 @@ const CareerAssessmentPage = () => {
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <span>Actionable steps for career development</span>
+                </div>
+                
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="font-semibold text-blue-800 mb-2">Preview Sample Report</h4>
+                  <p className="text-blue-600 text-sm mb-3">
+                    Want to see what your final report will look like? View our sample report to preview the layout and format.
+                  </p>
+                  <Button 
+                    onClick={generateSamplePDF}
+                    variant="outline" 
+                    className="w-full border-blue-300 text-blue-700 hover:bg-blue-100"
+                  >
+                    📄 View Sample Report
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -792,6 +1018,14 @@ const CareerAssessmentPage = () => {
                   <Button variant="outline" onClick={downloadPDF} className="px-6 py-2">
                     Download PDF Report
                   </Button>
+                  {pdfUrl && (
+                    <a href={pdfUrl} target="_blank" rel="noreferrer" className="px-6 py-2 border rounded-md text-blue-700 border-blue-300 hover:bg-blue-50">
+                      View Saved PDF
+                    </a>
+                  )}
+                  {!pdfUrl && saving && (
+                    <span className="text-sm text-gray-500 self-center">Saving PDF…</span>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -827,6 +1061,16 @@ const CareerAssessmentPage = () => {
         <div className="text-center mb-6 bg-white bg-opacity-90 rounded-xl p-4 max-w-md mx-auto">
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Career Assessment</h1>
           <p className="text-gray-600">Question {currentStep + 1} of {questions.length}</p>
+          <div className="mt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={generateSamplePDF}
+              className="text-xs border-blue-300 text-blue-700 hover:bg-blue-50"
+            >
+              📄 View Sample Report
+            </Button>
+          </div>
         </div>
 
         {/* Progress Bar */}

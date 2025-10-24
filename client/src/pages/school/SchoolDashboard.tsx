@@ -34,25 +34,11 @@ const SchoolDashboard = () => {
   const [showStudentModal, setShowStudentModal] = useState(false);
 
   useEffect(() => {
-    // Check if school is authenticated
-    const schoolAuth = localStorage.getItem('schoolAuth');
-    if (!schoolAuth) {
-      window.location.href = '/school/login';
-      return;
-    }
-
-    const school = JSON.parse(schoolAuth);
-    setSchoolInfo(school);
-
-    // Load registered users
-    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    setStudents(registeredUsers);
+  // TODO: Replace with server-backed school session and data
+  window.location.href = '/school/login';
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('schoolAuth');
-    window.location.href = '/school/login';
-  };
+  const handleLogout = () => { window.location.href = '/school/login'; };
 
   const downloadStudentReport = (student: RegisteredUser) => {
     // Create a simple CSV report
@@ -91,8 +77,7 @@ Assessment Status: ${student.hasAssessment ? 'Completed' : 'Pending'}
 
   const viewAssessmentPDF = (student: RegisteredUser) => {
     // Get assessment results for this student
-    const assessmentResults = JSON.parse(localStorage.getItem('assessmentResults') || '[]');
-    const studentResult = assessmentResults.find((r: any) => r.userId === student.email);
+  const studentResult = null;
 
     if (!studentResult) {
       alert('No assessment results found for this student.');

@@ -1,11 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { db } from "@db";
-import * as schema from "@shared/schema";
-import * as adminSchema from "@shared/admin-schema";
-import { eq } from "drizzle-orm";
-import { registerAdminRoutes } from "./admin-routes";
-import { registerAdminDashboardRoutes } from "./admin-dashboard-routes";
+import { registerAdminRoutes } from "./admin-routes-supabase";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API route for executing code - could be expanded later for saving/loading code snippets
@@ -29,7 +24,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User registration endpoint
   app.post('/api/register', async (req, res) => {
     try {
-      const { name, email, password, studentName, parentName, schoolName, age, occupation, city, country, notes } = req.body;
+  const { name, email, password, studentName, parentName, schoolName, age, occupation, city, country, notes, phone, studentClass } = req.body;
       
       // Basic validation
       if (!name || !email || !password) {
@@ -45,10 +40,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(409).json({ success: false, message: 'User already exists' });
       }
       
-      // Insert new user
+      // Combine phone into notes if schema has no phone column
+  const combinedNotes = [notes, phone ? `Phone: ${phone}` : null, studentClass ? `Class: ${studentClass}` : null].filter(Boolean).join(' | ');
+      
+      // Insert new user with full profile data
       const newUser = await db.insert(schema.users).values({
         username: email,
-        password: password, // Note: In production, you should hash passwords
+        password: password, // Note: In production, hash passwords
+        fullName: name,
+        studentName: studentName ?? null,
+        parentName: parentName ?? null,
+        schoolName: schoolName ?? null,
+        age: age != null ? String(age) : null,
+        occupation: occupation ?? null,
+        city: city ?? null,
+        country: country ?? null,
+        notes: combinedNotes || null,
       }).returning();
       
       res.status(201).json({ 
@@ -56,11 +63,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: 'User registered successfully',
         user: { id: newUser[0].id, username: newUser[0].username }
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration error:', error);
       res.status(500).json({ 
         success: false, 
-        message: 'Server error during registration' 
+        message: error?.message || 'Server error during registration' 
       });
     }
   });
@@ -101,8 +108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register admin routes
   registerAdminRoutes(app);
   
-  // Register admin dashboard routes
-  registerAdminDashboardRoutes(app);
+  // Admin dashboard routes temporarily disabled to avoid ORM-related crashes.
 
   const httpServer = createServer(app);
 

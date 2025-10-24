@@ -1,6 +1,7 @@
 import { Express, Request, Response } from 'express';
 import { db } from './db';
 import { adminUsers, adminSessions } from '../shared/admin-schema';
+import { schools } from '../shared/schema';
 import { eq, and } from 'drizzle-orm';
 import { hashPassword, verifyPassword, generateToken } from './utils/auth';
 
@@ -515,6 +516,89 @@ export function registerAdminRoutes(app: Express) {
       });
     } catch (error) {
       console.error('Error fetching online users:', error);
+      res.status(500).json({ success: false, message: 'Server error' });
+    }
+  });
+
+  // School Management Endpoints
+  // In-memory storage for development mode
+  let schoolsStorage: any[] = [];
+
+  // Get all schools
+  app.get('/api/admin/schools', adminAuthMiddleware, async (req, res) => {
+    try {
+      // For development mode, use in-memory storage
+      res.status(200).json({ success: true, schools: schoolsStorage });
+      
+    } catch (error) {
+      console.error('Get schools error:', error);
+      res.status(500).json({ success: false, message: 'Server error' });
+    }
+  });
+
+  // Create new school
+  app.post('/api/admin/schools', adminAuthMiddleware, async (req, res) => {
+    try {
+      const { schoolName, email, password } = req.body;
+      
+      // Basic validation
+      if (!schoolName || !email || !password) {
+        return res.status(400).json({ success: false, message: 'School name, email, and password are required' });
+      }
+      
+      // Check for existing email in memory storage
+      const existingSchool = schoolsStorage.find(school => school.email === email);
+      
+      if (existingSchool) {
+        return res.status(409).json({ success: false, message: 'Email already in use' });
+      }
+      
+      // Generate school code
+      const schoolCode = schoolName.replace(/\s+/g, '').toLowerCase().substring(0, 8) + Date.now().toString().slice(-4);
+      
+      // Create new school in memory
+      const newSchool = {
+        id: Date.now(),
+        name: schoolName,
+        email,
+        password, // In production, this should be hashed
+        code: schoolCode,
+        createdAt: new Date().toISOString(),
+        isActive: true
+      };
+      
+      schoolsStorage.push(newSchool);
+      
+      res.status(201).json({ 
+        success: true, 
+        message: 'School created successfully',
+        school: {
+          id: newSchool.id,
+          name: newSchool.name,
+          email: newSchool.email,
+          code: newSchool.code,
+          createdAt: newSchool.createdAt
+        }
+      });
+      
+    } catch (error) {
+      console.error('Create school error:', error);
+      res.status(500).json({ success: false, message: 'Server error' });
+    }
+  });
+
+  // Delete school
+  app.delete('/api/admin/schools/:id', adminAuthMiddleware, async (req, res) => {
+    try {
+      const schoolId = parseInt(req.params.id);
+      
+      // Remove from memory storage
+      schoolsStorage = schoolsStorage.filter(school => school.id !== schoolId);
+      
+      res.status(200).json({ success: true, message: 'School deleted successfully' });
+      
+    } catch (error) {
+      console.error('Delete school error:', error);
       res.status(500).json({ success: false, message: 'Server error' });
     }
   });

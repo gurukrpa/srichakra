@@ -20,11 +20,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 interface School {
-  id: string;
-  schoolName: string;
-  email: string;
-  password: string;
-  createdAt: string;
+  id: string | number;
+  schoolName?: string;
+  name?: string;
+  email?: string;
+  code?: string;
+  created_at?: string;
 }
 
 interface StudentStats {
@@ -60,18 +61,33 @@ const Schools = () => {
   const [schoolStudents, setSchoolStudents] = useState<StudentDetail[]>([]);
   const [newSchool, setNewSchool] = useState({
     schoolName: '',
-    email: '',
-    password: ''
+    email: ''
   });
 
-  // Load schools from localStorage and calculate stats
+  // Load schools from server
   useEffect(() => {
-    const savedSchools = localStorage.getItem('schoolCredentials');
-    if (savedSchools) {
-      const schoolList = JSON.parse(savedSchools);
-      setSchools(schoolList);
-      calculateSchoolStats(schoolList);
-    }
+    const load = async () => {
+      try {
+        const token = typeof window !== 'undefined' ? window.sessionStorage.getItem('adm_token') : null;
+        const res = await fetch('/api/admin/schools', {
+          credentials: 'include',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
+        });
+        const data = await res.json();
+        const list = (data.schools || []).map((s: any) => ({
+          id: s.id,
+          schoolName: s.name,
+          email: s.email,
+          code: s.code,
+          created_at: s.created_at
+        }));
+        setSchools(list);
+        calculateSchoolStats(list as any);
+      } catch {
+        setSchools([]);
+      }
+    };
+    load();
   }, []);
 
   // Calculate student statistics for each school
@@ -79,73 +95,96 @@ const Schools = () => {
     const stats: {[key: string]: StudentStats} = {};
 
     schoolList.forEach(school => {
-      // Get school-created students
-      const schoolStudents = JSON.parse(localStorage.getItem('schoolStudents') || '[]');
-      const schoolCreatedStudents = schoolStudents.filter((s: any) => 
-        s.schoolEmail === school.email && s.createdBy === 'school'
-      );
-
-      // Get publicly registered students
-      const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-      const publicStudents = registeredUsers.filter((s: any) => 
-        s.schoolEmail === school.email
-      );
-
-      const allStudents = [...schoolCreatedStudents, ...publicStudents];
-
-      stats[school.email] = {
-        totalStudents: allStudents.length,
-        schoolCreated: schoolCreatedStudents.length,
-        publicRegistered: publicStudents.length,
-        assessmentCompleted: allStudents.filter(s => 
-          s.assessmentStatus === 'completed' || s.hasAssessment === true
-        ).length,
-        assessmentPending: allStudents.filter(s => 
-          s.assessmentStatus === 'not_started' || s.hasAssessment === false
-        ).length,
-        assessmentInProgress: allStudents.filter(s => 
-          s.assessmentStatus === 'in_progress'
-        ).length
+      stats[String(school.email || school.code || school.id)] = {
+        totalStudents: 0,
+        schoolCreated: 0,
+        publicRegistered: 0,
+        assessmentCompleted: 0,
+        assessmentPending: 0,
+        assessmentInProgress: 0
       };
     });
 
     setSchoolStats(stats);
   };
 
-  // Save schools to localStorage
-  const saveSchools = (updatedSchools: School[]) => {
-    localStorage.setItem('schoolCredentials', JSON.stringify(updatedSchools));
-    setSchools(updatedSchools);
-  };
+  // Saving schools is server-managed; localStorage removed
+  const saveSchools = (updatedSchools: School[]) => { setSchools(updatedSchools); };
 
   // Add new school
-  const addSchool = () => {
-    if (!newSchool.schoolName || !newSchool.email || !newSchool.password) {
+  const addSchool = async () => {
+  if (!newSchool.schoolName || !newSchool.email) {
       alert('Please fill all fields');
       return;
     }
 
-    const school: School = {
-      id: Date.now().toString(),
-      schoolName: newSchool.schoolName,
-      email: newSchool.email,
-      password: newSchool.password,
-      createdAt: new Date().toISOString()
-    };
+    try {
+      const token = typeof window !== 'undefined' ? window.sessionStorage.getItem('adm_token') : null;
+      const response = await fetch('/api/admin/schools', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          schoolName: newSchool.schoolName,
+          email: newSchool.email
+        })
+      });
 
-    const updatedSchools = [...schools, school];
-    saveSchools(updatedSchools);
-    
-    setNewSchool({ schoolName: '', email: '', password: '' });
-    setShowAddForm(false);
-    setShowPassword(false);
+  const data = await response.json();
+
+      if (data.success) {
+        // Add the new school to the local state
+        const newSchoolData: School = {
+          id: data.school.id,
+          schoolName: data.school.name,
+          email: data.school.email,
+          code: data.school.code,
+          created_at: data.school.created_at || data.school.createdAt
+        };
+
+        const updatedSchools = [...schools, newSchoolData];
+        setSchools(updatedSchools);
+        
+        alert('School created successfully!');
+  setNewSchool({ schoolName: '', email: '' });
+        setShowAddForm(false);
+        setShowPassword(false);
+      } else {
+        alert(`Error: ${data.message}`);
+      }
+    } catch (error) {
+      console.error('Error creating school:', error);
+      alert('Failed to create school. Please try again.');
+    }
   };
 
   // Delete school
-  const deleteSchool = (id: string) => {
+  const deleteSchool = async (id: string | number) => {
     if (confirm('Are you sure you want to delete this school?')) {
-      const updatedSchools = schools.filter(school => school.id !== id);
-      saveSchools(updatedSchools);
+      try {
+        const token = typeof window !== 'undefined' ? window.sessionStorage.getItem('adm_token') : null;
+        const response = await fetch(`/api/admin/schools/${id}`, {
+          method: 'DELETE',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
+          credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          const updatedSchools = schools.filter(school => school.id !== id);
+          setSchools(updatedSchools);
+          alert('School deleted successfully!');
+        } else {
+          alert(`Error: ${data.message}`);
+        }
+      } catch (error) {
+        console.error('Error deleting school:', error);
+        alert('Failed to delete school. Please try again.');
+      }
     }
   };
 
@@ -154,43 +193,16 @@ const Schools = () => {
     setSelectedSchool(school);
     
     // Get school-created students
-    const schoolStudents = JSON.parse(localStorage.getItem('schoolStudents') || '[]');
-    const schoolCreatedStudents = schoolStudents
-      .filter((s: any) => s.schoolEmail === school.email && s.createdBy === 'school')
-      .map((s: any) => ({
-        ...s,
-        source: 'school_created' as const,
-        registrationStatus: s.registrationStatus || 'pending',
-        assessmentStatus: s.assessmentStatus || 'not_started'
-      }));
-
-    // Get publicly registered students
-    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    const publicStudents = registeredUsers
-      .filter((s: any) => s.schoolEmail === school.email)
-      .map((s: any) => ({
-        id: s.email || Date.now().toString(),
-        studentName: s.studentName || s.name || 'Unknown',
-        parentName: s.parentName || '',
-        email: s.email,
-        phone: s.phone,
-        registrationStatus: 'registered' as const,
-        assessmentStatus: s.hasAssessment ? 'completed' : 'not_started',
-        createdAt: s.registeredAt || new Date().toISOString(),
-        source: 'public_registration' as const
-      }));
-
-    const allStudents = [...schoolCreatedStudents, ...publicStudents];
-    setSchoolStudents(allStudents);
+  setSchoolStudents([]);
     setShowStudentsModal(true);
   };
 
   // Copy credentials
   const copyCredentials = (school: School) => {
     const credentials = `School Login: ${window.location.origin}/school/login
-Email: ${school.email}
-Password: ${school.password}
-School: ${school.schoolName}`;
+Email: ${school.email || ''}
+Code: ${school.code || ''}
+School: ${school.schoolName || school.name || ''}`;
     
     navigator.clipboard.writeText(credentials);
     alert('School credentials copied! Share with the school.');
@@ -560,29 +572,7 @@ School: ${school.schoolName}`;
               />
             </div>
             
-            <div>
-              <Label className="text-sm font-medium text-gray-700">Login Password *</Label>
-              <div className="relative mt-1">
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  value={newSchool.password}
-                  onChange={(e) => setNewSchool(prev => ({ ...prev, password: e.target.value }))}
-                  placeholder="Create password"
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center hover:text-blue-600"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
-                  )}
-                </button>
-              </div>
-            </div>
+            {/* Login Password field removed (no password column in schools table) */}
           </div>
           
           <div className="flex gap-3">
@@ -593,7 +583,7 @@ School: ${school.schoolName}`;
               variant="outline" 
               onClick={() => {
                 setShowAddForm(false);
-                setNewSchool({ schoolName: '', email: '', password: '' });
+                setNewSchool({ schoolName: '', email: '' });
                 setShowPassword(false);
               }}
             >
@@ -644,16 +634,13 @@ School: ${school.schoolName}`;
                         <Mail className="w-4 h-4" />
                         <span>Email: {school.email}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span>Password: {'•'.repeat(school.password.length)}</span>
-                      </div>
                       <div>
-                        Registered: {new Date(school.createdAt).toLocaleDateString()}
+                        Registered: {school.created_at ? new Date(school.created_at).toLocaleDateString() : '-'}
                       </div>
                     </div>
 
                     {/* Student Statistics */}
-                    {schoolStats[school.email] && (
+                    {schoolStats[String(school.email || school.code || school.id)] && (
                       <div className="bg-white border rounded-lg p-4 mb-3">
                         <h5 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
                           <BarChart3 className="w-4 h-4" />
@@ -666,7 +653,7 @@ School: ${school.schoolName}`;
                               <span className="font-semibold text-blue-600">Total</span>
                             </div>
                             <div className="text-xl font-bold text-gray-900">
-                              {schoolStats[school.email].totalStudents}
+                              {schoolStats[String(school.email || school.code || school.id)].totalStudents}
                             </div>
                           </div>
                           <div className="text-center">
@@ -675,7 +662,7 @@ School: ${school.schoolName}`;
                               <span className="font-semibold text-green-600">Created</span>
                             </div>
                             <div className="text-xl font-bold text-gray-900">
-                              {schoolStats[school.email].schoolCreated}
+                              {schoolStats[String(school.email || school.code || school.id)].schoolCreated}
                             </div>
                           </div>
                           <div className="text-center">
@@ -684,7 +671,7 @@ School: ${school.schoolName}`;
                               <span className="font-semibold text-purple-600">Registered</span>
                             </div>
                             <div className="text-xl font-bold text-gray-900">
-                              {schoolStats[school.email].publicRegistered}
+                              {schoolStats[String(school.email || school.code || school.id)].publicRegistered}
                             </div>
                           </div>
                           <div className="text-center">
@@ -693,7 +680,7 @@ School: ${school.schoolName}`;
                               <span className="font-semibold text-green-600">Completed</span>
                             </div>
                             <div className="text-xl font-bold text-gray-900">
-                              {schoolStats[school.email].assessmentCompleted}
+                              {schoolStats[String(school.email || school.code || school.id)].assessmentCompleted}
                             </div>
                           </div>
                           <div className="text-center">
@@ -702,7 +689,7 @@ School: ${school.schoolName}`;
                               <span className="font-semibold text-orange-600">Pending</span>
                             </div>
                             <div className="text-xl font-bold text-gray-900">
-                              {schoolStats[school.email].assessmentPending}
+                              {schoolStats[String(school.email || school.code || school.id)].assessmentPending}
                             </div>
                           </div>
                         </div>

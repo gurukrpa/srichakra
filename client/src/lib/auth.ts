@@ -7,42 +7,36 @@ export interface UserSession {
   role?: string;
 }
 
-const SESSION_KEY = "userSession";
-
+// Server-backed: fetch user from whoami (cookie-based)
 export const getUserSession = (): UserSession | null => {
-  try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
+  // Keep a synchronous dev bypass only
   if (isDevBypassEnabled()) {
     return { id: "dev-user", email: "dev@example.com", name: "Developer" };
   }
+  // No synchronous session available without localStorage; callers should use getUserSessionAsync
   return null;
 };
 
-export const setUserSession = (session: UserSession | null) => {
-  if (!session) {
-    localStorage.removeItem(SESSION_KEY);
-    // Track logout activity
-    trackUserActivity('logout');
-    return;
+export const getUserSessionAsync = async (): Promise<UserSession | null> => {
+  try {
+    const res = await fetch('/api/user/whoami', { credentials: 'include' });
+    const data = await res.json();
+    return data?.user || null;
+  } catch {
+    return null;
   }
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-  // Track login activity
-  trackUserActivity('login', session);
 };
 
-export const logout = () => {
-  // Clear session
-  localStorage.removeItem(SESSION_KEY);
-  
-  // Clear saved credentials if user wants to logout completely
-  localStorage.removeItem('rememberLogin');
-  localStorage.removeItem('userCredentials');
-  
+export const setUserSession = (_session: UserSession | null) => {
+  // No-op: session is managed by server cookie now
+};
+
+export const logout = async () => {
+  try {
+    await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+  } catch {}
   // Track logout
   trackUserActivity('logout');
-  
   // Redirect to login
   window.location.href = '/login';
 };
@@ -86,13 +80,15 @@ export const trackUserActivity = async (action: 'login' | 'logout' | 'activity',
 
 export const isAuthenticated = (): boolean => {
   if (isDevBypassEnabled()) return true;
-  return !!getUserSession();
+  // Without local state, this is indeterminate synchronously; prefer calling verifySession
+  return false;
 };
 
 export const verifySession = async (): Promise<boolean> => {
   // In dev bypass, always valid
   if (isDevBypassEnabled()) return true;
-  return Promise.resolve(!!getUserSession());
+  const u = await getUserSessionAsync();
+  return !!u;
 };
 
 export const initializeAuth = () => {
