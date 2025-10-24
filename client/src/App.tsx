@@ -13,7 +13,6 @@ import SignUp from "@/pages/SignUp";
 import Career from "@/pages/Career";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
-import CareerAssessmentIntro from "@/pages/CareerAssessmentIntro";
 import CareerAssessment from "@/pages/CareerAssessment";
 import ComprehensiveAssessment from "@/pages/ComprehensiveAssessment";
 import AdminLogin from "@/pages/admin/AdminLogin";
@@ -56,7 +55,6 @@ export default function App() {
               <Route path="/login" component={Login} />
               <Route path="/signup" component={SignUp} />
               <Route path="/career" component={Career} />
-              <Route path="/career-assessment-intro" component={CareerAssessmentIntro} />
               <Route path="/career-assessment" component={CareerAssessment} />
               <Route path="/comprehensive-assessment" component={ComprehensiveAssessment} />
               <Route path="/about" component={About} />
