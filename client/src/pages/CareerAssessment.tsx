@@ -348,6 +348,51 @@ const CareerAssessmentPage = () => {
           <meta charset="utf-8" />
           <title>Srichakra Career Assessment Report${isSample ? ' - Sample' : ''}</title>
           <style>
+            @page {
+              size: A4 portrait;
+              margin: 15mm 15mm 15mm 15mm;
+            }
+            
+            @media print {
+              * { 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact; 
+              }
+              body { 
+                background: white !important; 
+                margin: 0; 
+                padding: 0;
+              }
+              .page { 
+                margin: 0 !important; 
+                border-radius: 0 !important; 
+                box-shadow: none !important;
+                padding: 15mm !important;
+                width: 100% !important;
+                min-height: 100vh !important;
+                box-sizing: border-box !important;
+                page-break-after: always;
+              }
+              .page:last-child {
+                page-break-after: avoid;
+              }
+              .header {
+                margin-bottom: 20px !important;
+              }
+              h1 { 
+                font-size: 1.8em !important; 
+                margin: 5px 0 !important;
+              }
+              h2 { 
+                font-size: 1.3em !important; 
+                margin: 15px 0 10px 0 !important;
+              }
+              h3 { 
+                font-size: 1.1em !important; 
+                margin: 10px 0 !important;
+              }
+            }
+            
             body { 
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
               margin: 0; padding: 0; 
@@ -355,13 +400,18 @@ const CareerAssessmentPage = () => {
               color: #333;
             }
             .page { 
-              min-height: 100vh; 
-              padding: 40px; 
+              min-height: 297mm;
+              width: 210mm;
+              padding: 30px; 
               background: white; 
-              margin: 20px; 
+              margin: 20px auto; 
               border-radius: 15px;
               box-shadow: 0 10px 30px rgba(0,0,0,0.1);
               page-break-after: always;
+              box-sizing: border-box;
+            }
+            .page:last-child {
+              page-break-after: avoid;
             }
             .header { 
               text-align: center; 
@@ -544,7 +594,15 @@ const CareerAssessmentPage = () => {
                 <text x="50" y="${finalScores.length * 50 + 70}" font-size="10" fill="#888">💡 Higher scores indicate stronger natural aptitudes in those areas</text>
               </svg>
             </div>
+          </div>
 
+          <!-- Page 3: Domain Distribution & Brain Analysis -->
+          <div class="page">
+            <div class="header">
+              <h1>Domain Distribution & Brain Analysis</h1>
+            </div>
+
+            <!-- Domain Distribution Overview (Pie Chart) -->
             <div style="background: #f8f9fa; padding: 30px; border-radius: 15px; margin: 20px 0; border: 1px solid #e9ecef;">
               <div style="display: flex; align-items: center; margin-bottom: 25px;">
                 <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #E29578, #FFDDD2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px;">
@@ -570,13 +628,9 @@ const CareerAssessmentPage = () => {
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Page 3: Brain Analysis -->
-          <div class="page">
-            <div class="header">
-              <h1>Brain Hemisphere Analysis</h1>
-            </div>
+            <!-- Brain Hemisphere Analysis -->
+            <h2 style="margin-top: 30px;">Brain Hemisphere Analysis</h2>
 
             <div style="margin: 30px 0;">
               <!-- Left Brain Analysis -->
@@ -823,7 +877,385 @@ const CareerAssessmentPage = () => {
             </div>
           </div>
 
-          <script>
+          <!-- Page 5: Learning Styles & Five Senses Profile -->
+          <div class="page">
+            <div class="header">
+              <h1>Learning Styles & Multiple Intelligences</h1>
+            </div>
+
+            <h2>Your Learning Profile</h2>
+            <p style="font-size: 1.1em; margin-bottom: 30px; color: #666;">
+              Understanding how you learn best helps optimize your educational journey and career development.
+            </p>
+            
+            <div style="background: linear-gradient(135deg, #FFDDD2, #E29578); padding: 25px; border-radius: 15px; margin-bottom: 30px;">
+              <h3 style="margin-top: 0;">VAK Learning Style Analysis</h3>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px;">
+                <div style="background: white; padding: 20px; border-radius: 10px; text-align: center;">
+                  <h4 style="color: #006D77; margin-bottom: 15px;">👁️ Visual</h4>
+                  <p style="font-size: 0.95em; line-height: 1.6;">You learn best with diagrams, charts, colors, and spatial understanding. Recommended: Mind maps, infographics, color coding notes.</p>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 10px; text-align: center;">
+                  <h4 style="color: #006D77; margin-bottom: 15px;">👂 Auditory</h4>
+                  <p style="font-size: 0.95em; line-height: 1.6;">You excel with lectures, discussions, and verbal explanations. Recommended: Audio recordings, group discussions, verbal repetition.</p>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 10px; text-align: center;">
+                  <h4 style="color: #006D77; margin-bottom: 15px;">✋ Kinesthetic</h4>
+                  <p style="font-size: 0.95em; line-height: 1.6;">Hands-on learning through doing and movement works best. Recommended: Lab work, physical models, role-play activities.</p>
+                </div>
+              </div>
+            </div>
+
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 15px;">
+              <h3 style="margin-top: 0;">Five Senses Learning Integration</h3>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 20px;">
+                <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #5390D9;">
+                  <h4 style="color: #5390D9; margin-bottom: 10px;">👁️ Visual Processing</h4>
+                  <p style="font-size: 0.9em; margin-bottom: 10px;">Prefer diagrams, colors, spatial layouts, and written instructions.</p>
+                  <ul style="font-size: 0.85em; line-height: 1.8;">
+                    <li>Use highlighters and color-coded notes</li>
+                    <li>Create visual summaries and concept maps</li>
+                    <li>Watch educational videos and demonstrations</li>
+                  </ul>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #7209B7;">
+                  <h4 style="color: #7209B7; margin-bottom: 10px;">👂 Auditory Processing</h4>
+                  <p style="font-size: 0.9em; margin-bottom: 10px;">Excel with spoken information, discussions, and rhythmic patterns.</p>
+                  <ul style="font-size: 0.85em; line-height: 1.8;">
+                    <li>Record lectures and listen multiple times</li>
+                    <li>Participate in study groups</li>
+                    <li>Use mnemonic devices and songs</li>
+                  </ul>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #F72585;">
+                  <h4 style="color: #F72585; margin-bottom: 10px;">✋ Kinesthetic/Tactile</h4>
+                  <p style="font-size: 0.9em; margin-bottom: 10px;">Learn through physical activity, touch, and hands-on experience.</p>
+                  <ul style="font-size: 0.85em; line-height: 1.8;">
+                    <li>Use physical models and manipulatives</li>
+                    <li>Take frequent study breaks with movement</li>
+                    <li>Engage in lab work and practical projects</li>
+                  </ul>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #4CC9F0;">
+                  <h4 style="color: #4CC9F0; margin-bottom: 10px;">👃👅 Olfactory & Gustatory</h4>
+                  <p style="font-size: 0.9em; margin-bottom: 10px;">Memory associations with scents and tastes enhance recall.</p>
+                  <ul style="font-size: 0.85em; line-height: 1.8;">
+                    <li>Use specific scents during study sessions</li>
+                    <li>Associate concepts with sensory experiences</li>
+                    <li>Create contextual learning environments</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Page 6: Detailed Aptitude Breakdown -->
+          <div class="page">
+            <div class="header">
+              <h1>Detailed Aptitude Analysis</h1>
+            </div>
+
+            <h2>Complete Domain Assessment</h2>
+            <p style="font-size: 1.1em; margin-bottom: 30px; color: #666;">
+              A comprehensive breakdown of your performance across all assessed domains.
+            </p>
+            
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.95em;">
+              <thead>
+                <tr style="background: linear-gradient(135deg, #006D77, #83C5BE); color: white;">
+                  <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Rank</th>
+                  <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Domain</th>
+                  <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Score</th>
+                  <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Questions</th>
+                  <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Proficiency Level</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${finalScores.map((score: any, index: number) => {
+                  const level = score.score >= 4.0 ? 'Excellent' : score.score >= 3.5 ? 'Strong' : score.score >= 3.0 ? 'Good' : score.score >= 2.5 ? 'Moderate' : 'Developing';
+                  const levelColor = score.score >= 4.0 ? '#006D77' : score.score >= 3.5 ? '#83C5BE' : score.score >= 3.0 ? '#FFDDD2' : score.score >= 2.5 ? '#E29578' : '#ccc';
+                  return `
+                    <tr style="background: ${index % 2 === 0 ? '#f8f9fa' : 'white'};">
+                      <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold;">#${index + 1}</td>
+                      <td style="padding: 12px; border: 1px solid #ddd; font-weight: 600;">${score.domain}</td>
+                      <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-size: 1.2em; font-weight: bold; color: ${levelColor};">${score.score.toFixed(2)}/5.0</td>
+                      <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${score.count}</td>
+                      <td style="padding: 12px; border: 1px solid #ddd;">
+                        <span style="background: ${levelColor}; color: ${score.score >= 3.0 ? 'white' : '#333'}; padding: 6px 12px; border-radius: 15px; font-size: 0.9em; font-weight: 600;">${level}</span>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+
+            <div style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); padding: 25px; border-radius: 15px; margin-top: 30px;">
+              <h3 style="margin-top: 0; color: #006D77;">Score Interpretation Guide</h3>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #006D77;">
+                  <h4 style="margin: 0 0 10px 0; color: #006D77;">4.0 - 5.0: Excellent</h4>
+                  <p style="font-size: 0.9em; margin: 0;">This is a core strength area. You show exceptional aptitude and should consider careers heavily utilizing this domain.</p>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #83C5BE;">
+                  <h4 style="margin: 0 0 10px 0; color: #83C5BE;">3.0 - 3.9: Strong/Good</h4>
+                  <p style="font-size: 0.9em; margin: 0;">You have solid competence in this area. With focused development, this can become a primary strength.</p>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #E29578;">
+                  <h4 style="margin: 0 0 10px 0; color: #E29578;">2.0 - 2.9: Developing</h4>
+                  <p style="font-size: 0.9em; margin: 0;">This area shows potential for growth. Consider skill-building activities if it aligns with career interests.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Page 7: Educational Pathways -->
+          <div class="page">
+            <div class="header">
+              <h1>Educational Pathways & Skill Development</h1>
+            </div>
+
+            <h2>Recommended Educational Routes</h2>
+            <p style="font-size: 1.1em; margin-bottom: 30px; color: #666;">
+              Based on your top strengths, here are educational paths and skill development recommendations.
+            </p>
+
+            ${topDomains.slice(0, 3).map((domain: any, idx: number) => `
+              <div style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); padding: 25px; border-radius: 15px; margin-bottom: 25px; border-left: 5px solid #006D77;">
+                <h3 style="margin-top: 0; color: #006D77;">${idx + 1}. ${domain.domain} Development Path (Score: ${domain.score.toFixed(1)}/5.0)</h3>
+                
+                <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 15px;">
+                  <h4 style="color: #333; margin-bottom: 15px;">🎓 Degree Programs</h4>
+                  <ul style="line-height: 1.8; font-size: 0.95em;">
+                    ${domain.domain === 'Analytical' ? `
+                      <li>Bachelor's/Master's in Data Science, Mathematics, or Statistics</li>
+                      <li>Engineering programs (Computer Science, Electrical, Mechanical)</li>
+                      <li>Economics, Finance, or Business Analytics</li>
+                    ` : domain.domain === 'Technical' ? `
+                      <li>Computer Science or Software Engineering</li>
+                      <li>Information Technology or Cybersecurity</li>
+                      <li>Engineering disciplines (Mechanical, Civil, Electrical)</li>
+                    ` : domain.domain === 'Creative' ? `
+                      <li>Graphic Design, Fine Arts, or Visual Communication</li>
+                      <li>Architecture or Interior Design</li>
+                      <li>Creative Writing or Digital Media</li>
+                    ` : domain.domain === 'Social' ? `
+                      <li>Psychology, Counseling, or Social Work</li>
+                      <li>Human Resources Management</li>
+                      <li>Education or Teaching degrees</li>
+                    ` : domain.domain === 'Verbal' ? `
+                      <li>English Literature, Journalism, or Communications</li>
+                      <li>Law or Legal Studies</li>
+                      <li>Public Relations or Marketing</li>
+                    ` : `
+                      <li>Interdisciplinary studies aligned with ${domain.domain}</li>
+                      <li>Professional certification programs</li>
+                      <li>Vocational training relevant to your interests</li>
+                    `}
+                  </ul>
+                </div>
+
+                <div style="background: white; padding: 20px; border-radius: 10px;">
+                  <h4 style="color: #333; margin-bottom: 15px;">💡 Skills to Develop</h4>
+                  <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    ${domain.domain === 'Analytical' ? `
+                      <span style="background: #006D77; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9em;">Statistical Analysis</span>
+                      <span style="background: #006D77; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9em;">Critical Thinking</span>
+                      <span style="background: #006D77; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9em;">Data Visualization</span>
+                      <span style="background: #006D77; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9em;">Research Methods</span>
+                    ` : domain.domain === 'Technical' ? `
+                      <span style="background: #006D77; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9em;">Programming</span>
+                      <span style="background: #006D77; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9em;">System Design</span>
+                      <span style="background: #006D77; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9em;">Problem Solving</span>
+                      <span style="background: #006D77; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9em;">Technical Documentation</span>
+                    ` : domain.domain === 'Creative' ? `
+                      <span style="background: #006D77; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9em;">Design Thinking</span>
+                      <span style="background: #006D77; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9em;">Visual Communication</span>
+                      <span style="background: #006D77; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9em;">Innovation</span>
+                      <span style="background: #006D77; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9em;">Portfolio Building</span>
+                    ` : `
+                      <span style="background: #006D77; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9em;">Core Competencies</span>
+                      <span style="background: #006D77; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9em;">Professional Development</span>
+                      <span style="background: #006D77; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9em;">Industry Knowledge</span>
+                    `}
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+          <!-- Page 8: Action Plan & Next Steps -->
+          <div class="page">
+            <div class="header">
+              <h1>Your Personalized Action Plan</h1>
+            </div>
+
+            <h2>90-Day Career Development Roadmap</h2>
+            <p style="font-size: 1.1em; margin-bottom: 30px; color: #666;">
+              A structured plan to help you take actionable steps toward your ideal career path.
+            </p>
+
+            <div style="background: linear-gradient(135deg, #5390D9, #7209B7); color: white; padding: 25px; border-radius: 15px; margin-bottom: 30px;">
+              <h3 style="margin-top: 0; color: white;">Phase 1: Immediate Actions (Days 1-30)</h3>
+              <ul style="font-size: 1.05em; line-height: 2;">
+                <li>Research at least 5 careers aligned with your top domain: <strong>${topDomains[0].domain}</strong></li>
+                <li>Create a LinkedIn profile or update your professional portfolio</li>
+                <li>Identify 3 professionals in your field of interest and reach out for informational interviews</li>
+                <li>Enroll in one online course or workshop related to your strengths</li>
+                <li>Start a learning journal to track your progress and insights</li>
+              </ul>
+            </div>
+
+            <div style="background: linear-gradient(135deg, #F72585, #4CC9F0); color: white; padding: 25px; border-radius: 15px; margin-bottom: 30px;">
+              <h3 style="margin-top: 0; color: white;">Phase 2: Skill Building (Days 31-60)</h3>
+              <ul style="font-size: 1.05em; line-height: 2;">
+                <li>Complete your first certification or course in ${topDomains[0].domain}</li>
+                <li>Start a personal project showcasing your top skills</li>
+                <li>Join professional groups or communities (LinkedIn, Discord, local meetups)</li>
+                <li>Attend at least 2 industry webinars or networking events</li>
+                <li>Practice your skills through volunteer work or freelance opportunities</li>
+              </ul>
+            </div>
+
+            <div style="background: linear-gradient(135deg, #E29578, #FFDDD2); color: #333; padding: 25px; border-radius: 15px;">
+              <h3 style="margin-top: 0; color: #333;">Phase 3: Career Launch (Days 61-90)</h3>
+              <ul style="font-size: 1.05em; line-height: 2;">
+                <li>Apply to 5-10 internships, entry-level positions, or educational programs</li>
+                <li>Complete your portfolio or resume showcasing all new skills</li>
+                <li>Schedule a career counseling session with Srichakra Academy</li>
+                <li>Set specific career goals for the next 6 months and 1 year</li>
+                <li>Create a personal brand statement reflecting your unique strengths</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Page 9: Resources & Support -->
+          <div class="page">
+            <div class="header">
+              <h1>Resources & Continued Support</h1>
+            </div>
+
+            <h2>Tools & Platforms for Your Journey</h2>
+            
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; margin-bottom: 25px;">
+              <h3 style="margin-top: 0; color: #006D77;">📚 Online Learning Platforms</h3>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px;">
+                <div style="background: white; padding: 15px; border-radius: 10px;">
+                  <h4 style="margin: 0 0 10px 0;">For Technical Skills</h4>
+                  <ul style="font-size: 0.9em; line-height: 1.8;">
+                    <li>Coursera, edX, Udacity</li>
+                    <li>freeCodeCamp, Codecademy</li>
+                    <li>Khan Academy, MIT OpenCourseWare</li>
+                  </ul>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 10px;">
+                  <h4 style="margin: 0 0 10px 0;">For Creative & Business Skills</h4>
+                  <ul style="font-size: 0.9em; line-height: 1.8;">
+                    <li>LinkedIn Learning, Skillshare</li>
+                    <li>Domestika, CreativeLive</li>
+                    <li>HubSpot Academy, Google Digital Garage</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div style="background: linear-gradient(135deg, #83C5BE, #006D77); color: white; padding: 25px; border-radius: 15px; margin-bottom: 25px;">
+              <h3 style="margin-top: 0; color: white;">🎯 Career Exploration Tools</h3>
+              <ul style="font-size: 1.05em; line-height: 2;">
+                <li><strong>O*NET Online:</strong> Comprehensive occupation database with salary info</li>
+                <li><strong>LinkedIn Jobs:</strong> Explore job postings and required skills in your field</li>
+                <li><strong>Glassdoor:</strong> Company reviews, salary data, and interview insights</li>
+                <li><strong>Indeed Career Guide:</strong> Articles and resources for career planning</li>
+                <li><strong>Bureau of Labor Statistics:</strong> Employment projections and trends</li>
+              </ul>
+            </div>
+
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 15px;">
+              <h3 style="margin-top: 0; color: #006D77;">💼 Srichakra Academy Support Services</h3>
+              <div style="background: white; padding: 20px; border-radius: 10px; margin-top: 15px;">
+                <ul style="font-size: 1.05em; line-height: 2;">
+                  <li>One-on-one career counseling sessions</li>
+                  <li>Monthly career development workshops</li>
+                  <li>Mentorship program with industry professionals</li>
+                  <li>Resume and portfolio review services</li>
+                  <li>Interview preparation and mock interviews</li>
+                  <li>Networking events and alumni connections</li>
+                </ul>
+                <div style="margin-top: 20px; padding: 20px; background: linear-gradient(135deg, #FFDDD2, #E29578); border-radius: 10px; text-align: center;">
+                  <h4 style="margin: 0 0 10px 0; color: #333;">📞 Schedule Your Free Consultation</h4>
+                  <p style="margin: 0; font-size: 1.1em; font-weight: bold; color: #333;">Call: +91-98430 30697</p>
+                  <p style="margin: 5px 0 0 0; font-size: 0.95em; color: #666;">or visit srichakraacademy.org</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Page 10: Important Notes & Disclaimer -->
+          <div class="page">
+            <div class="header">
+              <h1>Important Information</h1>
+            </div>
+
+            <div style="background: linear-gradient(135deg, #fff3cd, #ffeaa7); padding: 25px; border-radius: 15px; margin-bottom: 30px; border-left: 5px solid #f0ad4e;">
+              <h2 style="margin-top: 0; color: #8a6d3b;">⚠️ Assessment Disclaimer</h2>
+              <p style="font-size: 1.05em; line-height: 1.8; color: #333;">
+                This career assessment is designed to provide guidance and insights based on your responses to a comprehensive psychometric questionnaire. 
+                While the results are based on validated frameworks including RIASEC, Multiple Intelligences, and VAK learning styles, they should be considered 
+                as <strong>one tool</strong> in your career planning process, not the sole determinant of your future path.
+              </p>
+              <p style="font-size: 1.05em; line-height: 1.8; color: #333;">
+                <strong>Please consider:</strong>
+              </p>
+              <ul style="font-size: 1.05em; line-height: 1.8; color: #333;">
+                <li>Your interests, passions, and personal values</li>
+                <li>Current job market conditions and future trends</li>
+                <li>Educational requirements and financial considerations</li>
+                <li>Work-life balance preferences and lifestyle goals</li>
+                <li>Opportunities for growth and skill development</li>
+              </ul>
+            </div>
+
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; margin-bottom: 30px;">
+              <h2 style="margin-top: 0; color: #006D77;">📊 About This Assessment</h2>
+              <p style="font-size: 1.05em; line-height: 1.8;">
+                <strong>Assessment Date:</strong> ${new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}<br>
+                <strong>Total Questions:</strong> ${totalAnswered} out of 60<br>
+                <strong>Domains Analyzed:</strong> ${finalScores.length}<br>
+                <strong>Assessment Type:</strong> Comprehensive Psychometric Evaluation<br>
+                <strong>Frameworks Used:</strong> RIASEC, Multiple Intelligences (MI), VAK Learning Styles, Brain Dominance Theory
+              </p>
+            </div>
+
+            <div style="background: linear-gradient(135deg, #d4edda, #c3e6cb); padding: 25px; border-radius: 15px; border-left: 5px solid #28a745;">
+              <h2 style="margin-top: 0; color: #155724;">✅ Next Steps Recommendation</h2>
+              <p style="font-size: 1.05em; line-height: 1.8; color: #155724;">
+                We strongly encourage you to:
+              </p>
+              <ol style="font-size: 1.05em; line-height: 1.8; color: #155724;">
+                <li><strong>Discuss these results</strong> with parents, teachers, or mentors</li>
+                <li><strong>Schedule a consultation</strong> with a Srichakra Academy career counselor</li>
+                <li><strong>Explore educational options</strong> aligned with your top domains</li>
+                <li><strong>Gain practical experience</strong> through internships or projects</li>
+                <li><strong>Reassess periodically</strong> as your interests and skills evolve</li>
+              </ol>
+            </div>
+
+            <div style="margin-top: 40px; text-align: center; padding: 30px; background: linear-gradient(135deg, #006D77, #83C5BE); border-radius: 15px; color: white;">
+              <div style="font-size: 3em; margin-bottom: 15px;">🎓</div>
+              <h2 style="margin: 0 0 15px 0; color: white;">Thank You for Choosing Srichakra Academy</h2>
+              <p style="font-size: 1.2em; margin: 0 0 20px 0; opacity: 0.95;">
+                "The School To identify Your Child's Divine Gift!!"
+              </p>
+              <div style="background: white; color: #006D77; padding: 20px; border-radius: 10px; display: inline-block;">
+                <p style="margin: 0 0 10px 0; font-size: 1.1em; font-weight: bold;">Contact Us</p>
+                <p style="margin: 0; font-size: 1.05em;">🌐 www.srichakraacademy.org</p>
+                <p style="margin: 5px 0 0 0; font-size: 1.05em;">📞 +91-98430 30697</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Final Page: Closing -->
+          <div class="page">
+
             window.onload = () => { 
               setTimeout(() => window.print(), 500); 
             };

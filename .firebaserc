@@ -1,5 +1,18 @@
 {
   "projects": {
     "default": "srichakraacademy-3f745"
-  }
+  },
+  "targets": {
+    "srichakraacademy-3f745": {
+      "hosting": {
+        "srichakra": [
+          "srichakraacademy-org"
+        ],
+        "legacy": [
+          "srichakraacademy-3f745"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
