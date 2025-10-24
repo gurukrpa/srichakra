@@ -603,9 +603,9 @@ const CareerAssessmentPage = () => {
             </div>
 
             <!-- Domain Distribution Overview (Pie Chart) -->
-            <div style="background: #f8f9fa; padding: 30px; border-radius: 15px; margin: 20px 0; border: 1px solid #e9ecef;">
+            <div style="background: #f8f9fa; padding: 22px; border-radius: 15px; margin: 16px 0; border: 1px solid #e9ecef;">
               <div style="display: flex; align-items: center; margin-bottom: 25px;">
-                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #E29578, #FFDDD2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px;">
+                <div style="width: 52px; height: 52px; background: linear-gradient(135deg, #E29578, #FFDDD2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 16px;">
                   <span style="color: white; font-size: 1.5em; font-weight: bold;">🍰</span>
                 </div>
                 <div>
@@ -613,13 +613,13 @@ const CareerAssessmentPage = () => {
                   <p style="margin: 5px 0 0 0; color: #666; font-size: 1em;">Visual representation of how your abilities are distributed across different areas</p>
                 </div>
               </div>
-              <div style="background: white; border-radius: 10px; padding: 20px; display: flex; align-items: center; gap: 20px;">
+              <div style="background: white; border-radius: 10px; padding: 14px; display: flex; align-items: center; gap: 16px;">
                 <div style="flex: 0 0 auto; text-align: left;">
                   <h3 style="margin: 0 0 10px 0; color: #006D77; font-size: 18px; font-weight: bold;">Your Talent Distribution</h3>
                   <p style="margin: 0; color: #666; font-size: 12px; max-width: 150px; line-height: 1.4;">💡 Larger sections represent your strongest talent areas</p>
                 </div>
                 <div style="flex: 1; text-align: center;">
-                  <svg width="320" height="320" viewBox="0 0 320 320">
+                  <svg width="280" height="280" viewBox="0 0 320 320">
                     ${pieSlices.replace(/cx="175"/g, 'cx="160"').replace(/cy="180"/g, 'cy="160"')}
                     <circle cx="160" cy="160" r="45" fill="white" stroke="#006D77" stroke-width="3"/>
                     <text x="160" y="155" text-anchor="middle" font-size="14" font-weight="bold" fill="#006D77">Total</text>
@@ -630,30 +630,30 @@ const CareerAssessmentPage = () => {
             </div>
 
             <!-- Brain Hemisphere Analysis -->
-            <h2 style="margin-top: 30px;">Brain Hemisphere Analysis</h2>
+            <h2 style="margin-top: 22px;">Brain Hemisphere Analysis</h2>
 
             <div style="margin: 30px 0;">
               <!-- Left Brain Analysis -->
-              <div style="display: flex; align-items: flex-start; margin: 25px 0; padding: 25px; background: linear-gradient(135deg, #2c5282, #553c9a); border-radius: 15px; color: white;">
-                <div style="width: 120px; height: 120px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 25px; flex-shrink: 0; border: 3px solid rgba(255,255,255,0.3);">
+              <div style="display: flex; align-items: flex-start; margin: 18px 0; padding: 18px; background: linear-gradient(135deg, #2c5282, #553c9a); border-radius: 15px; color: white; page-break-inside: avoid; break-inside: avoid;">
+                <div style="width: 100px; height: 100px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 18px; flex-shrink: 0; border: 3px solid rgba(255,255,255,0.3);">
                   <div style="text-align: center;">
                     <div style="font-size: 2.5em; margin-bottom: 5px;">🧠</div>
                     <div style="font-size: 0.8em; font-weight: bold;">LEFT</div>
                   </div>
                 </div>
                 <div style="flex: 1;">
-                  <h3 style="margin: 0 0 15px 0; font-size: 1.5em;">Left Brain Dominance (${leftBrainScore.toFixed(1)}/5.0)</h3>
-                  <p style="margin: 0 0 15px 0; font-size: 1.1em; line-height: 1.6;">
+                  <h3 style="margin: 0 0 12px 0; font-size: 1.3em;">Left Brain Dominance (${leftBrainScore.toFixed(1)}/5.0)</h3>
+                  <p style="margin: 0 0 12px 0; font-size: 1.0em; line-height: 1.55;">
                     <strong>Characteristics:</strong> Logical • Analytical • Sequential • Detail-oriented
                   </p>
-                  <div style="background: rgba(255,255,255,0.15); padding: 15px; border-radius: 8px; margin: 15px 0;">
+                  <div style="background: rgba(255,255,255,0.15); padding: 12px; border-radius: 8px; margin: 12px 0;">
                     <p style="margin: 0 0 10px 0; font-weight: bold;">Why Left Brain Matters:</p>
                     <p style="margin: 0; line-height: 1.5;">
                       Left brain dominance indicates strength in mathematical thinking, verbal processing, linear reasoning, and structured approaches. 
                       People with left brain dominance excel in careers requiring systematic analysis, clear communication, and logical problem-solving.
                     </p>
                   </div>
-                  <div style="margin-top: 15px;">
+                  <div style="margin-top: 12px;">
                     <strong>Your Left Brain Scores:</strong><br>
                     ${finalScores.filter(s => leftBrainDomains.includes(s.domain)).map(s => 
                       `<span style="display: inline-block; background: rgba(255,255,255,0.25); padding: 5px 10px; border-radius: 15px; margin: 3px 5px 3px 0; font-size: 0.9em;">${s.domain}: ${s.score.toFixed(1)}</span>`
@@ -663,26 +663,26 @@ const CareerAssessmentPage = () => {
               </div>
               
               <!-- Right Brain Analysis -->
-              <div style="display: flex; align-items: flex-start; margin: 25px 0; padding: 25px; background: linear-gradient(135deg, #b83280, #2980b9); border-radius: 15px; color: white;">
-                <div style="width: 120px; height: 120px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 25px; flex-shrink: 0; border: 3px solid rgba(255,255,255,0.3);">
+              <div style="display: flex; align-items: flex-start; margin: 18px 0; padding: 18px; background: linear-gradient(135deg, #b83280, #2980b9); border-radius: 15px; color: white; page-break-inside: avoid; break-inside: avoid;">
+                <div style="width: 100px; height: 100px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 18px; flex-shrink: 0; border: 3px solid rgba(255,255,255,0.3);">
                   <div style="text-align: center;">
                     <div style="font-size: 2.5em; margin-bottom: 5px;">🎨</div>
                     <div style="font-size: 0.8em; font-weight: bold;">RIGHT</div>
                   </div>
                 </div>
                 <div style="flex: 1;">
-                  <h3 style="margin: 0 0 15px 0; font-size: 1.5em;">Right Brain Dominance (${rightBrainScore.toFixed(1)}/5.0)</h3>
-                  <p style="margin: 0 0 15px 0; font-size: 1.1em; line-height: 1.6;">
+                  <h3 style="margin: 0 0 12px 0; font-size: 1.3em;">Right Brain Dominance (${rightBrainScore.toFixed(1)}/5.0)</h3>
+                  <p style="margin: 0 0 12px 0; font-size: 1.0em; line-height: 1.55;">
                     <strong>Characteristics:</strong> Creative • Intuitive • Holistic • Artistic
                   </p>
-                  <div style="background: rgba(255,255,255,0.15); padding: 15px; border-radius: 8px; margin: 15px 0;">
+                  <div style="background: rgba(255,255,255,0.15); padding: 12px; border-radius: 8px; margin: 12px 0;">
                     <p style="margin: 0 0 10px 0; font-weight: bold;">Why Right Brain Matters:</p>
                     <p style="margin: 0; line-height: 1.5;">
                       Right brain dominance indicates strength in visual-spatial thinking, creative expression, pattern recognition, and imaginative approaches. 
                       People with right brain dominance excel in careers requiring innovation, artistic vision, and holistic problem-solving.
                     </p>
                   </div>
-                  <div style="margin-top: 15px;">
+                  <div style="margin-top: 12px;">
                     <strong>Your Right Brain Scores:</strong><br>
                     ${finalScores.filter(s => rightBrainDomains.includes(s.domain)).map(s => 
                       `<span style="display: inline-block; background: rgba(255,255,255,0.25); padding: 5px 10px; border-radius: 15px; margin: 3px 5px 3px 0; font-size: 0.9em;">${s.domain}: ${s.score.toFixed(1)}</span>`
