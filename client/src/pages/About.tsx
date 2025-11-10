@@ -24,7 +24,7 @@ const About = () => {
             {/* Srichakra Text */}
             <div className="flex flex-col">
               <SrichakraText size="5xl" color="text-[#800000]" decorative={true} withBorder={true}>Srichakra</SrichakraText>
-              <div className="text-xl">The School To identify Your Child's Divine Gift!!</div>
+              <div className="text-xl">Srichakra – The School To Identify Your Child’s Divine Gift!!</div>
             </div>
           </div>
           <Link href="/">
@@ -39,47 +39,98 @@ const About = () => {
       {/* Main content */}
       <div className="container mx-auto py-12 px-4">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold mb-6 text-[#006D77]">About Srichakra</h1>
-          
+          <h1 className="text-3xl font-bold mb-2 text-[#006D77]">About Us</h1>
+          <p className="text-lg text-[#1f2937] mb-6">Empowering Every Learner’s Journey</p>
+
           <div className="space-y-6 text-gray-700">
-            <p className="leading-relaxed">
-              Srichakra Educational Consultancy is a pioneering institution dedicated to unlocking the innate potential of every child through scientific and holistic assessment methods. Founded on the principle that each child possesses unique talents and abilities, Srichakra aims to guide students and parents in making informed educational and career decisions.
-            </p>
-            
-            <h2 className="text-xl font-semibold text-[#006D77] mt-8">Our Vision</h2>
-            <p className="leading-relaxed">
-              To create a world where every child's natural talents are recognized, nurtured, and channeled toward a fulfilling educational journey and career path. We envision a future where education is personalized to individual strengths, leading to happier, more successful individuals who contribute meaningfully to society.
-            </p>
-            
-            <h2 className="text-xl font-semibold text-[#006D77] mt-8">Our Mission</h2>
-            <p className="leading-relaxed">
-              To provide cutting-edge assessment tools and expert guidance that reveal a child's innate potential, empowering parents and educators to make informed decisions about educational pathways, career options, and personal development strategies.
-            </p>
-            
-            <h2 className="text-xl font-semibold text-[#006D77] mt-8">Our Approach</h2>
-            <p className="leading-relaxed">
-              Srichakra combines traditional wisdom with modern scientific methods to provide a comprehensive understanding of each child's potential. Our flagship services include:
-            </p>
-            
-            <ul className="list-disc pl-6 space-y-2">
-              <li><span className="font-medium">Dermatoglyphics Multiple Intelligence Test (DMIT):</span> A scientific analysis of fingerprint patterns to reveal inborn talents, learning styles, and brain dominance.</li>
-              <li><span className="font-medium">Career Counseling:</span> Personalized guidance based on aptitude, interests, and market trends to help students make informed career choices.</li>
-              <li><span className="font-medium">Overseas Admission Support:</span> Comprehensive assistance for students aspiring to study abroad, including university selection, application processes, and visa guidance.</li>
-              <li><span className="font-medium">Bridging Courses:</span> Specialized programs designed to fill academic gaps and prepare students for advanced education or career transitions.</li>
-            </ul>
-            
-            <h2 className="text-xl font-semibold text-[#006D77] mt-8">Our Commitment</h2>
-            <p className="leading-relaxed">
-              At Srichakra, we are committed to maintaining the highest standards of integrity, expertise, and personalized attention. We believe in building lasting relationships with our clients, supporting them throughout their educational journey, and celebrating their successes as our own.
-            </p>
-          </div>
-          
-          <div className="mt-8 flex justify-center">
-            <Link href="/contact">
-              <Button className="bg-[#006D77] hover:bg-[#005964]">
-                Contact Us
-              </Button>
-            </Link>
+            <section>
+              <h2 className="text-xl font-semibold text-[#006D77]">Our Vision</h2>
+              <p className="leading-relaxed mt-2">
+                To create an inclusive and inspired learning ecosystem where every child’s individuality is celebrated, nurtured, and guided toward lifelong success.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-[#006D77]">Our Mission</h2>
+              <p className="leading-relaxed mt-2">
+                To empower every child to access education in the way they learn best, nurturing their confidence and potential through personalized learning approaches — and to help them find career paths that align with their unique strengths and aspirations, both in India and globally.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-[#006D77]">Who We Are</h2>
+              <p className="leading-relaxed mt-2">
+                Srichakra is an educational support organization dedicated to complementing diverse curricula and learner needs through personalized and holistic learning solutions. We believe that every child has a unique potential waiting to be discovered — and our mission is to help them enhance their abilities, overcome learning challenges, and achieve their fullest potential through inclusive and strength-based approaches.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-[#006D77]">What We Do</h2>
+              <ul className="mt-2 space-y-4">
+                <li>
+                  <div className="font-medium">💡 Multiple Intelligence–Based Enrichment Programs</div>
+                  <p className="leading-relaxed">
+                    Individual and group sessions that help students discover their unique learning styles, build confidence, and develop essential life skills through structured MI-based activities.
+                  </p>
+                </li>
+                <li>
+                  <div className="font-medium">🎓 Career Counselling &amp; Guidance</div>
+                  <p className="leading-relaxed">
+                    We help students find their niche career paths through expert counselling that blends globally recognized frameworks — Multiple Intelligences (MI), MBTI, Holland RIASEC, and Aptitude Assessments — to identify strengths and align them with suitable academic and career choices.
+                  </p>
+                </li>
+                <li>
+                  <div className="font-medium">🌍 Overseas Education &amp; University Admissions</div>
+                  <p className="leading-relaxed">
+                    We provide end-to-end overseas education support, including admission guidance, SOP/LOR preparation, visa documentation, and pre-departure orientation for destinations such as Australia, Canada, New Zealand, Germany, France, USA, UK, Ireland, and Asian countries.
+                  </p>
+                </li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-[#006D77]">Our Collaboration</h2>
+              <p className="leading-relaxed mt-2">
+                As a Career Counselling Partner for Schools, we offer on-campus and virtual programs that enable students to explore opportunities, make informed decisions, and build confident, purposeful futures.
+              </p>
+              <p className="mt-2 font-medium tracking-wide">Discover • Decide • Develop!!</p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-[#006D77]">Our Team</h2>
+              <p className="leading-relaxed mt-2">
+                At the heart of Srichakra is a dedicated team of educators, counsellors, and psychologists who share a common goal — to empower learners through inclusive education and guided self-discovery.
+              </p>
+              <div className="mt-4 rounded-md bg-[#f9fafb] p-4 border">
+                <div className="font-semibold">Chief Mentor – Eswari</div>
+                <div className="text-sm text-gray-600">Certified Career Counsellor | International Education Advisor | Special Educator | Founder – Srichakra</div>
+                <p className="leading-relaxed mt-3">
+                  With 29 years of cross-sector experience since 1996, Eswari brings together corporate leadership, educational psychology, and international academic guidance into a unified mission — to help every learner realize their strengths and shape a meaningful path forward.
+                </p>
+                <p className="leading-relaxed mt-3">
+                  She founded Srichakra with a sole intention to enrich every child’s potential through inclusive and personalized educational practices. Over the years, her team has successfully guided students with Specific Learning Differences (SLD) and diverse learning needs to achieve excellence in academics and co-curricular areas. Her unique approach blends traditional wisdom with modern pedagogical tools, ensuring that each child discovers their individuality, confidence, and capability to thrive.
+                </p>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-[#006D77]">Partner with Us!</h2>
+              <p className="leading-relaxed mt-2">
+                Partner with Srichakra to empower your students with structured career guidance, personalized enrichment programs, and global education opportunities. Together, we can nurture confident, capable, and future-ready learners.
+              </p>
+              <div className="mt-4">
+                <Link href="/contact">
+                  <Button className="bg-[#006D77] hover:bg-[#005964]">Get in touch</Button>
+                </Link>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-[#006D77]">Our Partners</h2>
+              <p className="leading-relaxed mt-2">
+                Proud Career Counselling Partner of Spring Days International School, offering on-campus guidance programs that help students explore possibilities and build meaningful futures.
+              </p>
+            </section>
           </div>
         </div>
       </div>
