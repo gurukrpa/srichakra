@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import itemBank from '@shared/assessment-items.json';
 import jsPDF from 'jspdf';
+import { computeClusterScores, computeClusterScoresFromItems, topClusterRecommendations } from '@/lib/scoring/careerClusters';
+import clusterDefinitions from '@shared/career-clusters.json';
 import { buildApiUrl } from '@/config/api';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
@@ -20,6 +22,13 @@ type AssessmentItem = {
   frameworks: string[]; // canonical tags; multi-mapping allowed
   reverse?: boolean; // reverse-keyed item (1↔5)
   required?: boolean; // default true
+  // Extended fields to support objective/weighted items and cluster mapping
+  subDomain?: string;
+  weight?: number;
+  type?: 'likert' | 'objective';
+  correctAnswer?: any;
+  maxScore?: number;
+  careerClusters?: string[];
 };
 
 const CareerAssessmentPage = () => {
@@ -51,7 +60,13 @@ const CareerAssessmentPage = () => {
     domain: q.domain,
     frameworks: Array.isArray(q.frameworks) ? q.frameworks : (q.framework ? String(q.framework).split('/').filter(Boolean) : []),
     reverse: !!q.reverse,
-    required: true,
+    required: q.required !== false,
+    subDomain: q.subDomain || q.facet || undefined,
+    weight: typeof q.weight === 'number' ? q.weight : (q.weight ? Number(q.weight) : 1),
+    type: q.type || (q.correctAnswer !== undefined ? 'objective' : 'likert'),
+    correctAnswer: q.correctAnswer,
+    maxScore: typeof q.maxScore === 'number' ? q.maxScore : (q.maxScore ? Number(q.maxScore) : undefined),
+    careerClusters: Array.isArray(q.careerClusters) ? q.careerClusters : (q.careerClusters ? String(q.careerClusters).split(/[,;|]/).map((s:string)=>s.trim()).filter(Boolean) : []),
   }));
 
   // Simple deterministic PRNG (xorshift32) and shuffler
@@ -184,12 +199,46 @@ const CareerAssessmentPage = () => {
           : best;
       }, null);
 
-    const reportData = { 
-      finalScores, 
-  totalAnswered: Object.keys(answers).length,
+    // Compute career cluster scores from two approaches: domain-weights & item-level mapping
+    const clusterScoresFromDomain = computeClusterScores(finalScores as any);
+    const clusterScoresFromItems = computeClusterScoresFromItems(questions, answers);
+
+    // Combine both approaches into a single ranked list (average percent when both present)
+    const combinedMap: Record<string, { name: string; domainPercent?: number; itemPercent?: number; combinedPercent?: number }> = {};
+    clusterScoresFromDomain.forEach((c: any) => {
+      const name = c.name || `cluster_${c.id}`;
+      combinedMap[name] = combinedMap[name] || { name };
+      combinedMap[name].domainPercent = c.percent ?? Math.round((c.rawScore/5)*100);
+    });
+    clusterScoresFromItems.forEach((c: any) => {
+      const def = (clusterDefinitions as any[]).find(d => d.key === c.key);
+      const name = def?.name || c.key;
+      combinedMap[name] = combinedMap[name] || { name };
+      combinedMap[name].itemPercent = c.scorePercent;
+    });
+
+    const combinedList = Object.keys(combinedMap).map(k => {
+      const v = combinedMap[k];
+      const counts = (v.domainPercent !== undefined ? 1 : 0) + (v.itemPercent !== undefined ? 1 : 0);
+      const sum = (v.domainPercent || 0) + (v.itemPercent || 0);
+      const combinedPercent = counts > 0 ? Math.round(sum / counts) : 0;
+      return { name: v.name, domainPercent: v.domainPercent ?? null, itemPercent: v.itemPercent ?? null, combinedPercent };
+    }).sort((a,b) => b.combinedPercent - a.combinedPercent);
+
+    const suggestedClusters = combinedList.slice(0, 3);
+
+    const reportData = {
+      finalScores,
+      totalAnswered: Object.keys(answers).length,
       vak: vakRaw,
-      vakDominant
-    };
+      vakDominant,
+      careerClusters: {
+        fromDomain: clusterScoresFromDomain,
+        fromItems: clusterScoresFromItems,
+        combined: combinedList
+      },
+      suggestedClusters
+    } as any;
     setReport(reportData);
     
   // Save assessment results and update user status
@@ -245,6 +294,16 @@ const CareerAssessmentPage = () => {
         doc.text(`${i + 1}. ${t.domain}: ${t.score.toFixed(2)}`, 20, startY + i * 8);
       });
       let y = startY + top.length * 8 + 6;
+      // Insert Top Career Clusters (if available)
+      if (reportData?.topClusters?.length) {
+        doc.text('Top Career Clusters:', 14, y);
+        y += 6;
+        reportData.topClusters.forEach((c: any, i: number) => {
+          doc.text(`${i + 1}. ${c.name}: ${c.rawScore.toFixed(2)} (${c.percent}%)`, 20, y);
+          y += 6;
+        });
+        y += 4;
+      }
       doc.text('All Domains:', 14, y);
       y += 6;
       reportData.finalScores.forEach((t: any) => {

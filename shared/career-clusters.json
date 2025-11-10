@@ -1,0 +1,24 @@
+[
+  { "id": 1, "key": "data_analytics", "name": "Data & Analytics", "description": "Roles focused on data interpretation, statistics and business intelligence.", "domains": ["Analytical", "Technical"] },
+  { "id": 2, "key": "software_it", "name": "Software & IT", "description": "Software development, systems, DevOps and IT services.", "domains": ["Technical", "Analytical"] },
+  { "id": 3, "key": "engineering", "name": "Engineering & Manufacturing", "description": "Designing, building and maintaining mechanical/electrical systems.", "domains": ["Technical", "Analytical"] },
+  { "id": 4, "key": "healthcare", "name": "Healthcare & Allied", "description": "Medical, allied health, therapy and healthcare support roles.", "domains": ["Social", "Conscientiousness"] },
+  { "id": 5, "key": "education", "name": "Education & Training", "description": "Teaching, training, instructional design and education support.", "domains": ["Verbal", "Social"] },
+  { "id": 6, "key": "creative_design", "name": "Creative Arts & Design", "description": "Graphic design, visual arts, multimedia and creative production.", "domains": ["Creative", "Musical"] },
+  { "id": 7, "key": "business_management", "name": "Business & Management", "description": "Management, operations, planning and administration roles.", "domains": ["Executive", "Conscientiousness"] },
+  { "id": 8, "key": "finance", "name": "Finance & Accounting", "description": "Finance, accounting, audit and financial analysis careers.", "domains": ["Analytical", "Conscientiousness"] },
+  { "id": 9, "key": "legal_policy", "name": "Legal & Public Policy", "description": "Law, policy, governance, and regulatory roles.", "domains": ["Verbal", "Analytical"] },
+  { "id": 10, "key": "social_services", "name": "Social Work & Care", "description": "Counseling, community services and social support careers.", "domains": ["Social", "Values"] },
+  { "id": 11, "key": "hospitality", "name": "Hospitality & Tourism", "description": "Customer service, travel, and hospitality operations.", "domains": ["Social", "Executive"] },
+  { "id": 12, "key": "environment_agriculture", "name": "Environment & Agriculture", "description": "Environmental science, agronomy and conservation roles.", "domains": ["Naturalistic", "Analytical"] },
+  { "id": 13, "key": "media_communications", "name": "Media & Communications", "description": "Journalism, media production, PR and communications.", "domains": ["Verbal", "Creative"] },
+  { "id": 14, "key": "sales_marketing", "name": "Sales & Marketing", "description": "Sales, digital marketing and customer acquisition roles.", "domains": ["Social", "Creative"] },
+  { "id": 15, "key": "research_rnd", "name": "Research & Development", "description": "Scientific research, R&D and innovation-focused careers.", "domains": ["Analytical", "Learning"] },
+  { "id": 16, "key": "trades_construction", "name": "Skilled Trades & Construction", "description": "Hands-on technical trades, construction and on-site work.", "domains": ["Technical", "Kinesthetic"] },
+  { "id": 17, "key": "logistics_supply", "name": "Logistics & Supply Chain", "description": "Operations, warehousing, distribution and supply chain planning.", "domains": ["Executive", "Analytical"] },
+  { "id": 18, "key": "human_resources", "name": "Human Resources", "description": "Talent management, HR operations and organizational development.", "domains": ["Social", "Executive"] },
+  { "id": 19, "key": "science_lab", "name": "Science & Laboratory", "description": "Laboratory scientists, technicians and experimental roles.", "domains": ["Analytical", "Technical"] },
+  { "id": 20, "key": "entrepreneurship", "name": "Entrepreneurship & Startups", "description": "Startup founders, small business management and innovation entrepreneurship.", "domains": ["Executive", "Creative"] }
+
+]
+
