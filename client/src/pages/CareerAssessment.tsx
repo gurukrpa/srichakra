@@ -3,7 +3,6 @@ import itemBank from '@shared/assessment-items.json';
 import jsPDF from 'jspdf';
 import { computeClusterScores, computeClusterScoresFromItems, topClusterRecommendations } from '@/lib/scoring/careerClusters';
 import clusterDefinitions from '@shared/career-clusters.json';
-import { computeAptitudeScores } from '@/lib/scoring/aptitude';
 import { buildApiUrl } from '@/config/api';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
@@ -238,8 +237,7 @@ const CareerAssessmentPage = () => {
         fromItems: clusterScoresFromItems,
         combined: combinedList
       },
-      suggestedClusters,
-      aptitude: computeAptitudeScores(questions as any, answers)
+      suggestedClusters
     } as any;
     setReport(reportData);
     
@@ -306,21 +304,6 @@ const CareerAssessmentPage = () => {
         });
         y += 4;
       }
-      // Aptitude objective items summary
-      if (reportData?.aptitude?.total?.totalCount) {
-        doc.text('Aptitude (Objective Items):', 14, y);
-        y += 6;
-        const total = reportData.aptitude.total;
-        doc.text(`Overall: ${total.correctCount}/${total.totalCount} correct (${total.percent}%)`, 20, y);
-        y += 6;
-        const topAptDomains = (reportData.aptitude.byDomain || []).slice(0, 5);
-        topAptDomains.forEach((d: any) => {
-          if (y > 280) { doc.addPage(); y = 20; }
-          doc.text(`${d.key}: ${d.correctCount}/${d.totalCount} (${d.percent}%)`, 22, y);
-          y += 6;
-        });
-        y += 4;
-      }
       doc.text('All Domains:', 14, y);
       y += 6;
       reportData.finalScores.forEach((t: any) => {
@@ -363,7 +346,7 @@ const CareerAssessmentPage = () => {
         { domain: 'Naturalistic', score: 2.5, count: 3 },
         { domain: 'General', score: 3.6, count: 12 }
       ],
-  totalAnswered: 66,
+  totalAnswered: 51,
   vak: { Visual: 4.1, Auditory: 3.6, Kinesthetic: 3.2 },
   vakDominant: 'Visual'
     };
@@ -740,14 +723,8 @@ const CareerAssessmentPage = () => {
                 </div>
                 <div style="flex: 1;">
                   <h3 style="margin: 0 0 15px 0; font-size: 1.5em;">Left Brain Dominance (${leftBrainScore.toFixed(1)}/5.0)</h3>
-                  <p style="margin: 0 0 8px 0; font-size: 1.1em; line-height: 1.6;">
+                  <p style="margin: 0 0 15px 0; font-size: 1.1em; line-height: 1.6;">
                     <strong>Characteristics:</strong> Logical • Analytical • Sequential • Detail-oriented
-                  </p>
-                  <p style="margin: 0 0 8px 0; font-size: 1em; line-height: 1.5;">
-                    You excel in structured thinking, mathematical concepts, and systematic problem-solving approaches.
-                  </p>
-                  <p style="margin: 0 0 15px 0; font-size: 1em; line-height: 1.5;">
-                    This brain preference supports careers in research, accounting, engineering, and analytical fields.
                   </p>
                   <div style="background: rgba(255,255,255,0.15); padding: 15px; border-radius: 8px; margin: 15px 0;">
                     <p style="margin: 0 0 10px 0; font-weight: bold;">Why Left Brain Matters:</p>
@@ -775,14 +752,8 @@ const CareerAssessmentPage = () => {
                 </div>
                 <div style="flex: 1;">
                   <h3 style="margin: 0 0 15px 0; font-size: 1.5em;">Right Brain Dominance (${rightBrainScore.toFixed(1)}/5.0)</h3>
-                  <p style="margin: 0 0 8px 0; font-size: 1.1em; line-height: 1.6;">
+                  <p style="margin: 0 0 15px 0; font-size: 1.1em; line-height: 1.6;">
                     <strong>Characteristics:</strong> Creative • Intuitive • Holistic • Artistic
-                  </p>
-                  <p style="margin: 0 0 8px 0; font-size: 1em; line-height: 1.5;">
-                    You thrive in visual-spatial thinking, creative expression, and seeing the big picture connections.
-                  </p>
-                  <p style="margin: 0 0 15px 0; font-size: 1em; line-height: 1.5;">
-                    This brain preference supports careers in design, arts, innovation, and creative problem-solving fields.
                   </p>
                   <div style="background: rgba(255,255,255,0.15); padding: 15px; border-radius: 8px; margin: 15px 0;">
                     <p style="margin: 0 0 10px 0; font-weight: bold;">Why Right Brain Matters:</p>
@@ -811,103 +782,6 @@ const CareerAssessmentPage = () => {
               </p>
             </div>
 
-            <!-- Individual Domain Explanations -->
-            <h2 style="margin-top: 40px;">Your Strength Profile</h2>
-            <div style="margin: 30px 0;">
-              ${finalScores.slice(0, 5).map((score: any, index: number) => {
-                const domainIcons = {
-                  'Analytical': '🧮',
-                  'Technical': '⚙️',
-                  'Social': '🤝',
-                  'Creative': '🎨',
-                  'Verbal': '📝',
-                  'Executive': '🎯',
-                  'Musical': '🎵',
-                  'Naturalistic': '🌿',
-                  'Conscientiousness': '✅',
-                  'Learning': '📚'
-                };
-                const domainExplanations = {
-                  'Analytical': [
-                    'You excel at logical thinking, problem-solving, and data analysis.',
-                    'Your strength lies in breaking down complex information systematically.',
-                    'This skill supports careers in research, finance, and analytical fields.'
-                  ],
-                  'Technical': [
-                    'You have strong practical skills and enjoy working with tools and technology.',
-                    'You learn best through hands-on experimentation and technical problem-solving.',
-                    'This aptitude suits engineering, IT, and technical trades careers.'
-                  ],
-                  'Social': [
-                    'You thrive in collaborative environments and enjoy helping others.',
-                    'Your interpersonal skills make you effective in team settings and leadership roles.',
-                    'This strength supports careers in education, healthcare, and community services.'
-                  ],
-                  'Creative': [
-                    'You have innovative thinking and enjoy artistic expression and design.',
-                    'Your imagination and originality help you generate unique solutions.',
-                    'This talent suits careers in arts, design, marketing, and creative industries.'
-                  ],
-                  'Verbal': [
-                    'You communicate effectively and enjoy reading, writing, and discussion.',
-                    'Your language skills help you express ideas clearly and persuasively.',
-                    'This strength supports careers in teaching, writing, law, and communications.'
-                  ],
-                  'Executive': [
-                    'You excel at planning, organization, and leading projects to completion.',
-                    'Your decision-making and coordination skills drive successful outcomes.',
-                    'This aptitude suits management, administration, and leadership roles.'
-                  ],
-                  'Musical': [
-                    'You have sensitivity to rhythm, melody, and musical expression.',
-                    'Your auditory perception and creativity shine in musical contexts.',
-                    'This talent supports careers in music, performance, and audio production.'
-                  ],
-                  'Naturalistic': [
-                    'You connect deeply with nature and understand environmental patterns.',
-                    'Your observation skills and environmental awareness are highly developed.',
-                    'This aptitude suits careers in science, conservation, and outdoor education.'
-                  ],
-                  'Conscientiousness': [
-                    'You are detail-oriented, responsible, and committed to quality work.',
-                    'Your thoroughness and reliability ensure tasks are completed properly.',
-                    'This trait supports careers requiring precision and dependability.'
-                  ],
-                  'Learning': [
-                    'You have effective study habits and enjoy continuous personal growth.',
-                    'Your learning strategies help you acquire new knowledge efficiently.',
-                    'This skill supports lifelong learning and academic success.'
-                  ]
-                };
-                
-                const explanations = domainExplanations[score.domain as keyof typeof domainExplanations] || [
-                  'You show balanced abilities in this area.',
-                  'This domain contributes to your overall skill profile.',
-                  'Consider how this strength can support your career goals.'
-                ];
-                
-                return `
-                  <div style="display: flex; align-items: flex-start; margin: 25px 0; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid ${['#006D77', '#83C5BE', '#FFDDD2', '#E29578', '#5390D9'][index % 5]};">
-                    <div style="width: 80px; height: 80px; background: linear-gradient(135deg, ${['#006D77', '#83C5BE', '#FFDDD2', '#E29578', '#5390D9'][index % 5]}, #ffffff); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; flex-shrink: 0; border: 3px solid rgba(0,0,0,0.1);">
-                      <span style="font-size: 2em;">${domainIcons[score.domain as keyof typeof domainIcons] || '⭐'}</span>
-                    </div>
-                    <div style="flex: 1;">
-                      <h3 style="margin: 0 0 12px 0; color: ${['#006D77', '#83C5BE', '#FFDDD2', '#E29578', '#5390D9'][index % 5]}; font-size: 1.3em;">${score.domain} (${score.score.toFixed(1)}/5.0)</h3>
-                      <p style="margin: 0 0 6px 0; line-height: 1.5; color: #555; font-size: 1em;">
-                        ${explanations[0]}
-                      </p>
-                      <p style="margin: 0 0 6px 0; line-height: 1.5; color: #555; font-size: 1em;">
-                        ${explanations[1]}
-                      </p>
-                      <p style="margin: 0; line-height: 1.5; color: #555; font-size: 1em;">
-                        ${explanations[2]}
-                      </p>
-                    </div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-
             <h2>Five Senses Learning Profile</h2>
             <div style="margin: 30px 0;">
               <!-- Visual Learning Style -->
@@ -917,14 +791,9 @@ const CareerAssessmentPage = () => {
                 </div>
                 <div style="flex: 1;">
                   <h3 style="color: #FF6B6B; margin: 0 0 8px 0;">Visual Learning Style</h3>
-                  <p style="margin: 0 0 6px 0; line-height: 1.5; color: #555;">
-                    <strong>You learn best through:</strong> Charts, diagrams, colors, images, and visual representations.
-                  </p>
-                  <p style="margin: 0 0 6px 0; line-height: 1.5; color: #555;">
-                    <strong>Study tips:</strong> Use mind maps, color-coded notes, and visual organizers to remember information.
-                  </p>
                   <p style="margin: 0; line-height: 1.5; color: #555;">
-                    <strong>Career match:</strong> Design, architecture, data visualization, and visual arts fields.
+                    <strong>Preference:</strong> Charts, diagrams, colors, images, and visual representations.<br>
+                    <strong>Why it matters:</strong> Visual learners process information best through seeing. They benefit from mind maps, infographics, and color-coded materials. This learning style is crucial for careers in design, architecture, and data visualization.
                   </p>
                 </div>
               </div>
@@ -936,14 +805,9 @@ const CareerAssessmentPage = () => {
                 </div>
                 <div style="flex: 1;">
                   <h3 style="color: #45B7D1; margin: 0 0 8px 0;">Auditory Learning Style</h3>
-                  <p style="margin: 0 0 6px 0; line-height: 1.5; color: #555;">
-                    <strong>You learn best through:</strong> Discussions, music, sounds, verbal instructions, and listening.
-                  </p>
-                  <p style="margin: 0 0 6px 0; line-height: 1.5; color: #555;">
-                    <strong>Study tips:</strong> Record lectures, discuss topics aloud, and use mnemonic devices with rhythm.
-                  </p>
                   <p style="margin: 0; line-height: 1.5; color: #555;">
-                    <strong>Career match:</strong> Teaching, counseling, music, public speaking, and communication roles.
+                    <strong>Preference:</strong> Discussions, music, sounds, verbal instructions, and listening.<br>
+                    <strong>Why it matters:</strong> Auditory learners excel through hearing and speaking. They benefit from lectures, group discussions, and audio materials. This style supports careers in teaching, counseling, music, and public speaking.
                   </p>
                 </div>
               </div>
@@ -955,14 +819,37 @@ const CareerAssessmentPage = () => {
                 </div>
                 <div style="flex: 1;">
                   <h3 style="color: #F39C12; margin: 0 0 8px 0;">Kinesthetic Learning Style</h3>
-                  <p style="margin: 0 0 6px 0; line-height: 1.5; color: #555;">
-                    <strong>You learn best through:</strong> Hands-on activities, movement, physical manipulation, and learning by doing.
-                  </p>
-                  <p style="margin: 0 0 6px 0; line-height: 1.5; color: #555;">
-                    <strong>Study tips:</strong> Use physical objects, take breaks for movement, and practice skills hands-on.
-                  </p>
                   <p style="margin: 0; line-height: 1.5; color: #555;">
-                    <strong>Career match:</strong> Engineering, healthcare, sports, crafts, and practical trades.
+                    <strong>Preference:</strong> Hands-on activities, movement, physical manipulation, and learning by doing.<br>
+                    <strong>Why it matters:</strong> Kinesthetic learners need physical interaction with materials. They excel in lab work, sports, crafts, and practical applications. This style suits careers in engineering, healthcare, sports, and trades.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Olfactory Learning Style -->
+              <div style="display: flex; align-items: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #9B59B6;">
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #9B59B6, #8E44AD); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; flex-shrink: 0;">
+                  <span style="font-size: 2em;">👃</span>
+                </div>
+                <div style="flex: 1;">
+                  <h3 style="color: #9B59B6; margin: 0 0 8px 0;">Olfactory Learning Style</h3>
+                  <p style="margin: 0; line-height: 1.5; color: #555;">
+                    <strong>Preference:</strong> Scents, environmental cues, and smell-based memory associations.<br>
+                    <strong>Why it matters:</strong> Olfactory learners have strong scent-memory connections and environmental awareness. They often excel in chemistry, perfumery, culinary arts, and nature-based careers where scent plays a role.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Gustatory Learning Style -->
+              <div style="display: flex; align-items: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #E74C3C;">
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #E74C3C, #C0392B); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; flex-shrink: 0;">
+                  <span style="font-size: 2em;">👅</span>
+                </div>
+                <div style="flex: 1;">
+                  <h3 style="color: #E74C3C; margin: 0 0 8px 0;">Gustatory Learning Style</h3>
+                  <p style="margin: 0; line-height: 1.5; color: #555;">
+                    <strong>Preference:</strong> Taste, experiential learning, and flavor-based memory formation.<br>
+                    <strong>Why it matters:</strong> Gustatory learners connect learning with taste experiences and hands-on exploration. They often succeed in culinary arts, food science, hospitality, and careers involving sensory evaluation.
                   </p>
                 </div>
               </div>
@@ -1706,9 +1593,6 @@ const CareerAssessmentPage = () => {
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3" onClick={() => setCurrentStep(0)}>
                     Start Assessment
-                  </Button>
-                  <Button size="lg" variant="outline" className="px-8 py-3 bg-white text-teal-700 border-white hover:bg-gray-100" onClick={generateSamplePDF}>
-                    📄 View Sample Report
                   </Button>
                   <Link href="/">
                     <Button size="lg" variant="outline" className="px-8 py-3">Back to Home</Button>
