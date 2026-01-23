@@ -1018,68 +1018,18 @@ const CareerAssessmentPage = () => {
             <p style="font-size: 1.1em; margin-bottom: 30px; color: #666;">
               Understanding how you learn best helps optimize your educational journey and career development.
             </p>
-            
-            <div style="background: linear-gradient(135deg, #FFDDD2, #E29578); padding: 25px; border-radius: 15px; margin-bottom: 30px;">
-              <h3 style="margin-top: 0;">VAK Learning Style Analysis${vakDominant ? ` — <span style='color:#006D77'>Dominant: <strong>${vakDominant}</strong></span>` : ''}</h3>
-              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px;">
-                <div style="background: white; padding: 20px; border-radius: 10px; text-align: center;">
-                  <h4 style="color: #006D77; margin-bottom: 10px;">👁️ Visual ${vakDominant==='Visual' ? '<span style="background:#006D77;color:white;padding:4px 8px;border-radius:12px;font-size:0.8em;">Dominant</span>' : ''}</h4>
-                  ${vak ? `<div style="margin: 6px 0 12px; font-weight: 700; color: #333;">Score: ${Math.round((vak.Visual/5)*100)}%</div>` : ''}
-                  <p style="font-size: 0.95em; line-height: 1.6;">You learn best with diagrams, charts, colors, and spatial understanding. Recommended: Mind maps, infographics, color coding notes.</p>
-                </div>
-                <div style="background: white; padding: 20px; border-radius: 10px; text-align: center;">
-                  <h4 style="color: #006D77; margin-bottom: 10px;">👂 Auditory ${vakDominant==='Auditory' ? '<span style="background:#006D77;color:white;padding:4px 8px;border-radius:12px;font-size:0.8em;">Dominant</span>' : ''}</h4>
-                  ${vak ? `<div style="margin: 6px 0 12px; font-weight: 700; color: #333;">Score: ${Math.round((vak.Auditory/5)*100)}%</div>` : ''}
-                  <p style="font-size: 0.95em; line-height: 1.6;">You excel with lectures, discussions, and verbal explanations. Recommended: Audio recordings, group discussions, verbal repetition.</p>
-                </div>
-                <div style="background: white; padding: 20px; border-radius: 10px; text-align: center;">
-                  <h4 style="color: #006D77; margin-bottom: 10px;">✋ Kinesthetic ${vakDominant==='Kinesthetic' ? '<span style="background:#006D77;color:white;padding:4px 8px;border-radius:12px;font-size:0.8em;">Dominant</span>' : ''}</h4>
-                  ${vak ? `<div style="margin: 6px 0 12px; font-weight: 700; color: #333;">Score: ${Math.round((vak.Kinesthetic/5)*100)}%</div>` : ''}
-                  <p style="font-size: 0.95em; line-height: 1.6;">Hands-on learning through doing and movement works best. Recommended: Lab work, physical models, role-play activities.</p>
-                </div>
-              </div>
-            </div>
-
-            <div style="background: #f8f9fa; padding: 25px; border-radius: 15px;">
-              <h3 style="margin-top: 0;">Five Senses Learning Integration</h3>
-              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 20px;">
-                <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #5390D9;">
-                  <h4 style="color: #5390D9; margin-bottom: 10px;">👁️ Visual Processing</h4>
-                  <p style="font-size: 0.9em; margin-bottom: 10px;">Prefer diagrams, colors, spatial layouts, and written instructions.</p>
-                  <ul style="font-size: 0.85em; line-height: 1.8;">
-                    <li>Use highlighters and color-coded notes</li>
-                    <li>Create visual summaries and concept maps</li>
-                    <li>Watch educational videos and demonstrations</li>
-                  </ul>
-                </div>
-                <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #7209B7;">
-                  <h4 style="color: #7209B7; margin-bottom: 10px;">👂 Auditory Processing</h4>
-                  <p style="font-size: 0.9em; margin-bottom: 10px;">Excel with spoken information, discussions, and rhythmic patterns.</p>
-                  <ul style="font-size: 0.85em; line-height: 1.8;">
-                    <li>Record lectures and listen multiple times</li>
-                    <li>Participate in study groups</li>
-                    <li>Use mnemonic devices and songs</li>
-                  </ul>
-                </div>
-                <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #F72585;">
-                  <h4 style="color: #F72585; margin-bottom: 10px;">✋ Kinesthetic/Tactile</h4>
-                  <p style="font-size: 0.9em; margin-bottom: 10px;">Learn through physical activity, touch, and hands-on experience.</p>
-                  <ul style="font-size: 0.85em; line-height: 1.8;">
-                    <li>Use physical models and manipulatives</li>
-                    <li>Take frequent study breaks with movement</li>
-                    <li>Engage in lab work and practical projects</li>
-                  </ul>
-                </div>
-                <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #4CC9F0;">
-                  <h4 style="color: #4CC9F0; margin-bottom: 10px;">👃👅 Olfactory & Gustatory</h4>
-                  <p style="font-size: 0.9em; margin-bottom: 10px;">Memory associations with scents and tastes enhance recall.</p>
-                  <ul style="font-size: 0.85em; line-height: 1.8;">
-                    <li>Use specific scents during study sessions</li>
-                    <li>Associate concepts with sensory experiences</li>
-                    <li>Create contextual learning environments</li>
-                  </ul>
-                </div>
-              </div>
+            <div style="background: #f8f9fa; padding: 30px; border-radius: 15px; border-left: 5px solid #006D77;">
+              <h3 style="margin-top: 0; color: #006D77;">Reinforcing Your Learning Style</h3>
+              <p style="font-size: 1.05em; color: #444; line-height: 1.7;">
+                Your dominant sense (see Page 3) is the anchor for how you absorb information fastest. Keep leaning into that strength—whether it’s visual mapping,
+                auditory discussion, or kinesthetic practice—and then layer in one supporting sense at a time. Consistency matters more than perfection: create a
+                ritual that tells your brain “it’s time to learn” and stick with it through every subject.
+              </p>
+              <ul style="margin: 20px 0 0 20px; color: #444; line-height: 1.8; font-size: 0.98em;">
+                <li>Design study blocks that start with your dominant sense, then add one contrasting sense to boost retention.</li>
+                <li>Translate class notes into the format your brain likes best (sketch notes, audio recaps, mini demos) within 24 hours.</li>
+                <li>Use the supporting senses tips on Page 3 whenever you feel stuck—it’s often the fastest way to regain focus.</li>
+              </ul>
             </div>
           </div>
 
