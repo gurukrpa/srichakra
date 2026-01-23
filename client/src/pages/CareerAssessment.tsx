@@ -443,6 +443,81 @@ const CareerAssessmentPage = () => {
       'General': ['Project Manager', 'Administrator', 'Consultant', 'Coordinator']
     };
 
+    const sensoryProfiles = [
+      {
+        key: 'Visual',
+        label: 'Visual (Sight)',
+        icon: '👁️',
+        gradient: 'linear-gradient(135deg, #FF6B6B, #FFD166)',
+        summary: 'You absorb complex ideas fastest when you can see them. Diagrams, slides, and color-coded layouts keep you focused and motivated.',
+        tips: [
+          'Translate every big idea into a diagram, storyboard, or sketch',
+          'Use contrasting colors to flag priorities or due dates',
+          'Summarize lessons visually (slide, mind map, or infographic)'
+        ]
+      },
+      {
+        key: 'Auditory',
+        label: 'Auditory (Hearing)',
+        icon: '👂',
+        gradient: 'linear-gradient(135deg, #45B7D1, #96CEB4)',
+        summary: 'Discussions, rhythms, and spoken explanations help you retain information. You thrive when you can hear concepts unpacked aloud.',
+        tips: [
+          'Record short voice notes after each study block',
+          'Teach the concept back in a study group or to a friend',
+          'Pair topics with rhythm, chants, or mnemonic sounds'
+        ]
+      },
+      {
+        key: 'Kinesthetic',
+        label: 'Kinesthetic (Touch & Movement)',
+        icon: '✋',
+        gradient: 'linear-gradient(135deg, #F39C12, #E67E22)',
+        summary: 'You learn by doing. Movement, tactile tools, and real-world application anchor ideas so they stick.',
+        tips: [
+          'Prototype or role-play the concept to feel how it works',
+          'Break long sessions with quick movement-based recaps',
+          'Use physical models, sticky notes, or manipulatives to plan'
+        ]
+      },
+      {
+        key: 'Olfactory',
+        label: 'Olfactory (Smell)',
+        icon: '👃',
+        gradient: 'linear-gradient(135deg, #9B59B6, #8E44AD)',
+        summary: 'Specific scents anchor your memories. Pairing aromas with study blocks can trigger faster recall later.',
+        tips: [
+          'Keep a consistent calming scent for deep-work sessions',
+          'Use a contrasting aroma when switching to creative tasks',
+          'Associate big milestones with a signature fragrance'
+        ]
+      },
+      {
+        key: 'Gustatory',
+        label: 'Gustatory (Taste)',
+        icon: '👅',
+        gradient: 'linear-gradient(135deg, #E74C3C, #C0392B)',
+        summary: 'Taste-based rituals make studying memorable. Flavor cues help you connect feelings, places, and lessons.',
+        tips: [
+          'Use a specific snack or drink when revising key topics',
+          'Match flavors to mood: citrus for focus, herbal for calm',
+          'Celebrate completed modules with a planned treat to reset'
+        ]
+      }
+    ] as const;
+
+    const dominantSensoryKey = (vakDominant ?? 'Visual') as typeof sensoryProfiles[number]['key'];
+    const primarySensory = sensoryProfiles.find(profile => profile.key === dominantSensoryKey) || sensoryProfiles[0];
+    const supportingSensory = sensoryProfiles.filter(profile => profile.key !== primarySensory.key);
+    const primarySenseScore = (() => {
+      if (!vak) return null;
+      if (primarySensory.key === 'Visual') return Math.round((vak.Visual / 5) * 100);
+      if (primarySensory.key === 'Auditory') return Math.round((vak.Auditory / 5) * 100);
+      if (primarySensory.key === 'Kinesthetic') return Math.round((vak.Kinesthetic / 5) * 100);
+      return null;
+    })();
+    const primarySenseScoreText = primarySenseScore !== null ? `${primarySenseScore}% preference` : 'Personalized preference';
+
     const w = window.open("", "_blank");
     if (!w) return;
     
@@ -639,6 +714,18 @@ const CareerAssessmentPage = () => {
                 problem-solving approach, and career satisfaction factors.
               </p>
             </div>
+
+            <div style="margin-top: 30px; background: #f8f9fa; border-radius: 15px; padding: 20px; border-left: 5px solid #006D77;">
+              <h2 style="margin-top: 0; color: #006D77;">How to Read This Report</h2>
+              <p style="color: #444; line-height: 1.6;">Use this guide as a conversation starter with teachers, parents, and counselors. It highlights how you think, work, and learn so you can make confident choices.</p>
+              <ul style="margin: 15px 0 0 20px; color: #444; line-height: 1.6;">
+                <li>Look at what you genuinely enjoy and do without forcing yourself.</li>
+                <li>Notice how you prefer to think (logical vs. creative) and work (independent vs. interactive).</li>
+                <li>Review the environments and career clusters that feel energizing.</li>
+                <li>Use the skill-building tips and next steps to keep growing.</li>
+              </ul>
+              <p style="margin-top: 15px; font-size: 0.95em; color: #777;">There are no “right” or “wrong” scores—this report is a compass, not a verdict.</p>
+            </div>
           </div>
 
           <!-- Page 2: Detailed Charts -->
@@ -784,73 +871,37 @@ const CareerAssessmentPage = () => {
 
             <h2>Five Senses Learning Profile</h2>
             <div style="margin: 30px 0;">
-              <!-- Visual Learning Style -->
-              <div style="display: flex; align-items: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #FF6B6B;">
-                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #FF6B6B, #4ECDC4); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; flex-shrink: 0;">
-                  <span style="font-size: 2em;">👁️</span>
+              <div style="background: linear-gradient(135deg, #004d57, #2d5a5e); padding: 30px; border-radius: 20px; color: white; box-shadow: 0 15px 35px rgba(0,0,0,0.15);">
+                <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: stretch;">
+                  <div style="flex: 1 1 280px; background: white; color: #1b1b1b; border-radius: 15px; padding: 20px; box-shadow: 0 8px 18px rgba(0,0,0,0.08);">
+                    <div style="display: flex; gap: 16px; align-items: center;">
+                      <div style="width: 80px; height: 80px; background: ${primarySensory.gradient}; border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 2.2em; color: white;">
+                        ${primarySensory.icon}
+                      </div>
+                      <div>
+                        <h3 style="margin: 0; color: #0b3b3c; font-size: 1.4em;">Dominant Sense: ${primarySensory.label}</h3>
+                        <div style="margin-top: 6px; font-weight: 600; color: #006D77;">${primarySenseScoreText}</div>
+                      </div>
+                    </div>
+                    <p style="margin: 18px 0 0 0; color: #444; line-height: 1.6; font-size: 1.05em;">${primarySensory.summary}</p>
+                  </div>
+                  <div style="flex: 1 1 260px; background: rgba(255,255,255,0.95); color: #1b1b1b; border-radius: 15px; padding: 20px; box-shadow: 0 8px 18px rgba(0,0,0,0.08);">
+                    <h4 style="margin: 0 0 12px 0; color: #006D77;">How to Support This Sense</h4>
+                    <ul style="margin: 0; padding-left: 20px; line-height: 1.8; color: #444; font-size: 0.98em;">
+                      ${primarySensory.tips.map((tip) => `<li>${tip}</li>`).join('')}
+                    </ul>
+                  </div>
                 </div>
-                <div style="flex: 1;">
-                  <h3 style="color: #FF6B6B; margin: 0 0 8px 0;">Visual Learning Style</h3>
-                  <p style="margin: 0; line-height: 1.5; color: #555;">
-                    <strong>Preference:</strong> Charts, diagrams, colors, images, and visual representations.<br>
-                    <strong>Why it matters:</strong> Visual learners process information best through seeing. They benefit from mind maps, infographics, and color-coded materials. This learning style is crucial for careers in design, architecture, and data visualization.
-                  </p>
-                </div>
-              </div>
-
-              <!-- Auditory Learning Style -->
-              <div style="display: flex; align-items: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #45B7D1;">
-                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #45B7D1, #96CEB4); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; flex-shrink: 0;">
-                  <span style="font-size: 2em;">👂</span>
-                </div>
-                <div style="flex: 1;">
-                  <h3 style="color: #45B7D1; margin: 0 0 8px 0;">Auditory Learning Style</h3>
-                  <p style="margin: 0; line-height: 1.5; color: #555;">
-                    <strong>Preference:</strong> Discussions, music, sounds, verbal instructions, and listening.<br>
-                    <strong>Why it matters:</strong> Auditory learners excel through hearing and speaking. They benefit from lectures, group discussions, and audio materials. This style supports careers in teaching, counseling, music, and public speaking.
-                  </p>
-                </div>
-              </div>
-
-              <!-- Kinesthetic Learning Style -->
-              <div style="display: flex; align-items: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #F39C12;">
-                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #F39C12, #E67E22); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; flex-shrink: 0;">
-                  <span style="font-size: 2em;">✋</span>
-                </div>
-                <div style="flex: 1;">
-                  <h3 style="color: #F39C12; margin: 0 0 8px 0;">Kinesthetic Learning Style</h3>
-                  <p style="margin: 0; line-height: 1.5; color: #555;">
-                    <strong>Preference:</strong> Hands-on activities, movement, physical manipulation, and learning by doing.<br>
-                    <strong>Why it matters:</strong> Kinesthetic learners need physical interaction with materials. They excel in lab work, sports, crafts, and practical applications. This style suits careers in engineering, healthcare, sports, and trades.
-                  </p>
-                </div>
-              </div>
-
-              <!-- Olfactory Learning Style -->
-              <div style="display: flex; align-items: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #9B59B6;">
-                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #9B59B6, #8E44AD); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; flex-shrink: 0;">
-                  <span style="font-size: 2em;">👃</span>
-                </div>
-                <div style="flex: 1;">
-                  <h3 style="color: #9B59B6; margin: 0 0 8px 0;">Olfactory Learning Style</h3>
-                  <p style="margin: 0; line-height: 1.5; color: #555;">
-                    <strong>Preference:</strong> Scents, environmental cues, and smell-based memory associations.<br>
-                    <strong>Why it matters:</strong> Olfactory learners have strong scent-memory connections and environmental awareness. They often excel in chemistry, perfumery, culinary arts, and nature-based careers where scent plays a role.
-                  </p>
-                </div>
-              </div>
-
-              <!-- Gustatory Learning Style -->
-              <div style="display: flex; align-items: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 5px solid #E74C3C;">
-                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #E74C3C, #C0392B); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; flex-shrink: 0;">
-                  <span style="font-size: 2em;">👅</span>
-                </div>
-                <div style="flex: 1;">
-                  <h3 style="color: #E74C3C; margin: 0 0 8px 0;">Gustatory Learning Style</h3>
-                  <p style="margin: 0; line-height: 1.5; color: #555;">
-                    <strong>Preference:</strong> Taste, experiential learning, and flavor-based memory formation.<br>
-                    <strong>Why it matters:</strong> Gustatory learners connect learning with taste experiences and hands-on exploration. They often succeed in culinary arts, food science, hospitality, and careers involving sensory evaluation.
-                  </p>
+                <div style="margin-top: 25px;">
+                  <h4 style="margin: 0 0 12px 0; font-size: 1.1em; letter-spacing: 0.5px; text-transform: uppercase;">Balance With Supporting Senses</h4>
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
+                    ${supportingSensory.map((sense) => `
+                      <div style="background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.25); border-radius: 12px; padding: 15px; backdrop-filter: blur(4px);">
+                        <div style="font-weight: 600; color: #fff; margin-bottom: 6px; font-size: 0.95em;">${sense.icon} ${sense.label}</div>
+                        <div style="font-size: 0.9em; color: #f1f1f1; line-height: 1.5;">${sense.tips[0]}</div>
+                      </div>
+                    `).join('')}
+                  </div>
                 </div>
               </div>
             </div>
