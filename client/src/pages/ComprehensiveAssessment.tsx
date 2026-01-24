@@ -381,7 +381,9 @@ const ComprehensiveAssessment: React.FC = () => {
               </button>
               
               <div className="text-sm text-gray-500 flex items-center">
-                Domain: <span className="ml-1 font-medium" style={{ color: domainColors[currentQ.domain] }}>{currentQ.domain}</span>
+                Domain: <span className="ml-1 font-medium" style={{ color: domainColors[currentQ.domain] }}>
+                  {currentQ.domain === 'APTITUDE' ? 'Interest & Confidence (Self-Reported)' : currentQ.domain}
+                </span>
               </div>
 
               {currentQuestion === questions.length - 1 ? (

@@ -29,6 +29,7 @@ type AssessmentItem = {
   correctAnswer?: any;
   maxScore?: number;
   careerClusters?: string[];
+  options?: Array<string | { label: string; value: any }>;
 };
 
 const CareerAssessmentPage = () => {
@@ -36,7 +37,7 @@ const CareerAssessmentPage = () => {
   const CAREER_ASSESSMENT_PAUSED = false;
   const [user, setUser] = useState<any>({ email: 'guest@local', fullName: 'Guest User', isGuest: true });
   const [currentStep, setCurrentStep] = useState(-1);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [answers, setAnswers] = useState<Record<number, any>>({});
   const [isCompleted, setIsCompleted] = useState(false);
   const [report, setReport] = useState<{
     finalScores: { domain: string; score: number; count: number }[];
@@ -67,6 +68,7 @@ const CareerAssessmentPage = () => {
     correctAnswer: q.correctAnswer,
     maxScore: typeof q.maxScore === 'number' ? q.maxScore : (q.maxScore ? Number(q.maxScore) : undefined),
     careerClusters: Array.isArray(q.careerClusters) ? q.careerClusters : (q.careerClusters ? String(q.careerClusters).split(/[,;|]/).map((s:string)=>s.trim()).filter(Boolean) : []),
+    options: Array.isArray(q.options) ? q.options : (Array.isArray(q.choices) ? q.choices : undefined),
   }));
 
   // Simple deterministic PRNG (xorshift32) and shuffler
@@ -109,6 +111,14 @@ const CareerAssessmentPage = () => {
     { value: 5, label: "Strongly Agree" }
   ];
 
+  const getObjectiveOptions = (q: AssessmentItem) => {
+    if (!q.options || !Array.isArray(q.options)) return [] as Array<{ value: any; label: string }>;
+    return q.options.map((opt) => {
+      if (typeof opt === 'string') return { value: opt, label: opt };
+      return { value: opt.value, label: opt.label };
+    });
+  };
+
   useEffect(() => {
     if (CAREER_ASSESSMENT_PAUSED) return;
     const userSession = getUserSession();
@@ -125,7 +135,7 @@ const CareerAssessmentPage = () => {
     }
   }, []);
 
-  const handleAnswer = (questionId: number, value: number) => {
+  const handleAnswer = (questionId: number, value: any) => {
     setAnswers(prev => ({ ...prev, [questionId]: value }));
   };
 
@@ -156,8 +166,10 @@ const CareerAssessmentPage = () => {
   const generateReport = () => {
     // Scoring: mean per domain (after reverse keying), displayed on 0–5 scale; charts normalize to percent via /5
     const domainScores: Record<string, number[]> = {};
+    const likertQuestions = questions.filter((q) => q.type !== 'objective');
+    const objectiveQuestions = questions.filter((q) => q.type === 'objective');
 
-    questions.forEach((q) => {
+    likertQuestions.forEach((q) => {
       const raw = answers[q.id];
       if (typeof raw === 'number') {
         const val = q.reverse ? 6 - raw : raw; // reverse-keyed
@@ -176,6 +188,37 @@ const CareerAssessmentPage = () => {
       .sort((a, b) => b.score - a.score);
 
     console.log('Assessment Results:', finalScores);
+
+    // Objective aptitude ability scoring (percentage-based)
+    const aptitudeCategoryLabels = [
+      'Numerical Aptitude',
+      'Logical Reasoning',
+      'Verbal Reasoning',
+      'Spatial Reasoning'
+    ];
+    const normalizeCategory = (value?: string) => (value || '').trim().toLowerCase();
+    const aptitudeAbilityScores: Record<string, { correct: number; total: number; percent: number }> = {};
+    aptitudeCategoryLabels.forEach((label) => {
+      aptitudeAbilityScores[label] = { correct: 0, total: 0, percent: 0 };
+    });
+
+    objectiveQuestions.forEach((q) => {
+      const category = aptitudeCategoryLabels.find((label) => normalizeCategory(label) === normalizeCategory(q.subDomain || q.domain));
+      if (!category) return;
+      const ans = answers[q.id];
+      if (ans === undefined || ans === null) return;
+      const isCorrect = Array.isArray(q.correctAnswer)
+        ? q.correctAnswer.some((a: any) => a === ans)
+        : ans === q.correctAnswer;
+      aptitudeAbilityScores[category].total += 1;
+      if (isCorrect) aptitudeAbilityScores[category].correct += 1;
+    });
+
+    const aptitudeQuestionsPerCategory = 4;
+    aptitudeCategoryLabels.forEach((label) => {
+      const entry = aptitudeAbilityScores[label];
+      entry.percent = Math.round((entry.correct / aptitudeQuestionsPerCategory) * 100);
+    });
     // VAK learning style scoring based on selected indicators
     const VAK_MAP: Record<'Visual' | 'Auditory' | 'Kinesthetic', number[]> = {
       Visual: [9, 34, 45],
@@ -232,6 +275,12 @@ const CareerAssessmentPage = () => {
       totalAnswered: Object.keys(answers).length,
       vak: vakRaw,
       vakDominant,
+      aptitudeAbility: aptitudeCategoryLabels.map((label) => ({
+        label,
+        correct: aptitudeAbilityScores[label].correct,
+        total: aptitudeAbilityScores[label].total,
+        percent: aptitudeAbilityScores[label].percent
+      })),
       careerClusters: {
         fromDomain: clusterScoresFromDomain,
         fromItems: clusterScoresFromItems,
@@ -304,6 +353,16 @@ const CareerAssessmentPage = () => {
         });
         y += 4;
       }
+      if (Array.isArray(reportData?.aptitudeAbility) && reportData.aptitudeAbility.length) {
+        if (y > 270) { doc.addPage(); y = 20; }
+        doc.text('Aptitude Ability Assessment (Grades 8–12):', 14, y);
+        y += 6;
+        reportData.aptitudeAbility.forEach((a: any, i: number) => {
+          doc.text(`${i + 1}. ${a.label}: ${a.percent}%`, 20, y);
+          y += 6;
+        });
+        y += 4;
+      }
       doc.text('All Domains:', 14, y);
       y += 6;
       reportData.finalScores.forEach((t: any) => {
@@ -348,7 +407,13 @@ const CareerAssessmentPage = () => {
       ],
   totalAnswered: 51,
   vak: { Visual: 4.1, Auditory: 3.6, Kinesthetic: 3.2 },
-  vakDominant: 'Visual'
+  vakDominant: 'Visual',
+  aptitudeAbility: [
+    { label: 'Numerical Aptitude', correct: 3, total: 4, percent: 75 },
+    { label: 'Logical Reasoning', correct: 2, total: 4, percent: 50 },
+    { label: 'Verbal Reasoning', correct: 3, total: 4, percent: 75 },
+    { label: 'Spatial Reasoning', correct: 4, total: 4, percent: 100 }
+  ]
     };
     
     generatePDFWithData(sampleReport, true);
@@ -376,6 +441,21 @@ const CareerAssessmentPage = () => {
           <text x="90" y="${yPosition + 23}" fill="white" font-size="13" font-weight="bold">${score.domain}</text>
           <text x="${percentage * 3 + 90}" y="${yPosition + 23}" fill="#333" font-size="12" font-weight="bold">${score.score.toFixed(1)}/5.0</text>
           <text x="70" y="${yPosition + 23}" fill="#666" font-size="11" text-anchor="end">${index + 1}.</text>
+        </g>
+      `;
+    }).join('');
+
+    const aptitudeAbility = Array.isArray(reportData?.aptitudeAbility) ? reportData.aptitudeAbility : [];
+    const aptitudeChartHeight = aptitudeAbility.length * 45 + 60;
+    const aptitudeBarChartSVG = aptitudeAbility.map((entry: any, index: number) => {
+      const percentage = Math.max(0, Math.min(100, Number(entry.percent) || 0));
+      const colors = ['#2d5a5e', '#5390D9', '#E29578', '#7209B7'];
+      const yPosition = index * 45 + 40;
+      return `
+        <g>
+          <rect x="160" y="${yPosition}" width="${percentage * 3}" height="30" fill="${colors[index % colors.length]}" rx="6"/>
+          <text x="150" y="${yPosition + 20}" fill="#333" font-size="12" text-anchor="end" font-weight="bold">${entry.label}</text>
+          <text x="${percentage * 3 + 170}" y="${yPosition + 20}" fill="#333" font-size="12" font-weight="bold">${percentage}%</text>
         </g>
       `;
     }).join('');
@@ -718,6 +798,10 @@ const CareerAssessmentPage = () => {
             <div style="margin-top: 30px; background: #f8f9fa; border-radius: 15px; padding: 20px; border-left: 5px solid #006D77;">
               <h2 style="margin-top: 0; color: #006D77;">How to Read This Report</h2>
               <p style="color: #444; line-height: 1.6;">Use this guide as a conversation starter with teachers, parents, and counselors. It highlights how you think, work, and learn so you can make confident choices.</p>
+              <p style="color: #444; line-height: 1.6; margin-top: 10px;">
+                <strong>Multiple Intelligences (MI)</strong> describes cognitive and learning preferences. <strong>MBTI</strong> reflects working style and interaction preferences.
+                <strong>RIASEC</strong> shows interest-based domain alignment. <strong>Aptitude Ability</strong> scores indicate demonstrated ability that supports and validates exploration.
+              </p>
               <ul style="margin: 15px 0 0 20px; color: #444; line-height: 1.6;">
                 <li>Look at what you genuinely enjoy and do without forcing yourself.</li>
                 <li>Notice how you prefer to think (logical vs. creative) and work (independent vs. interactive).</li>
@@ -725,6 +809,13 @@ const CareerAssessmentPage = () => {
                 <li>Use the skill-building tips and next steps to keep growing.</li>
               </ul>
               <p style="margin-top: 15px; font-size: 0.95em; color: #777;">There are no “right” or “wrong” scores—this report is a compass, not a verdict.</p>
+            </div>
+
+            <div style="margin-top: 20px; background: #fff7ed; border-radius: 15px; padding: 18px; border: 1px solid #fed7aa;">
+              <h3 style="margin: 0 0 8px 0; color: #c2410c;">How Career Cluster Suggestions Are Used</h3>
+              <p style="margin: 0; color: #7c2d12; line-height: 1.6;">
+                Career cluster suggestions are generated by combining interest patterns, work preferences, and demonstrated abilities. These clusters highlight areas worth exploring rather than fixed career decisions. Abilities can be developed over time.
+              </p>
             </div>
           </div>
 
@@ -741,8 +832,8 @@ const CareerAssessmentPage = () => {
                   <span style="color: white; font-size: 1.5em; font-weight: bold;">📊</span>
                 </div>
                 <div>
-                  <h3 style="margin: 0; color: #006D77; font-size: 1.3em;">Your Aptitude Scores Analysis</h3>
-                  <p style="margin: 5px 0 0 0; color: #666; font-size: 1em;">Detailed breakdown of your strengths across different domains (Scale: 1-5)</p>
+                  <h3 style="margin: 0; color: #006D77; font-size: 1.3em;">Interest &amp; Confidence (Self-Reported) Scores Analysis</h3>
+                  <p style="margin: 5px 0 0 0; color: #666; font-size: 1em;">Detailed breakdown of your self-reported strengths across different domains (Scale: 1-5)</p>
                 </div>
               </div>
               <svg width="100%" height="${finalScores.length * 50 + 80}" viewBox="0 0 650 ${finalScores.length * 50 + 80}" style="background: white; border-radius: 10px; padding: 10px;">
@@ -753,13 +844,35 @@ const CareerAssessmentPage = () => {
                   </linearGradient>
                 </defs>
                 <text x="325" y="25" text-anchor="middle" font-size="16" font-weight="bold" fill="#006D77">
-                  Your Aptitude Profile
+                  Interest &amp; Confidence (Self-Reported) Profile
                 </text>
                 ${barChartSVG}
                 <line x1="380" y1="40" x2="380" y2="${finalScores.length * 50 + 50}" stroke="#ddd" stroke-width="2"/>
                 <text x="385" y="45" font-size="12" fill="#666">Average (3.0)</text>
-                <text x="50" y="${finalScores.length * 50 + 70}" font-size="10" fill="#888">💡 Higher scores indicate stronger natural aptitudes in those areas</text>
+                <text x="50" y="${finalScores.length * 50 + 70}" font-size="10" fill="#888">💡 Higher scores indicate stronger interest &amp; confidence in those areas</text>
               </svg>
+            </div>
+
+            <h2>Aptitude Ability Assessment (Grades 8–12)</h2>
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; margin: 20px 0; border: 1px solid #e9ecef;">
+              <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                <div style="width: 52px; height: 52px; background: linear-gradient(135deg, #2d5a5e, #5390D9); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 16px;">
+                  <span style="color: white; font-size: 1.3em; font-weight: bold;">🧮</span>
+                </div>
+                <div>
+                  <h3 style="margin: 0; color: #006D77; font-size: 1.2em;">Objective Ability Scores</h3>
+                  <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95em;">Percentage-based results from objective questions</p>
+                </div>
+              </div>
+              ${aptitudeAbility.length ? `
+                <svg width="100%" height="${aptitudeChartHeight}" viewBox="0 0 520 ${aptitudeChartHeight}" style="background: white; border-radius: 10px; padding: 10px;">
+                  <text x="260" y="22" text-anchor="middle" font-size="14" font-weight="bold" fill="#006D77">Aptitude Ability Profile</text>
+                  ${aptitudeBarChartSVG}
+                  <text x="20" y="${aptitudeChartHeight - 10}" font-size="10" fill="#888">💡 Scores are calculated as percent correct</text>
+                </svg>
+              ` : `
+                <p style="color: #666; font-size: 0.95em;">No objective aptitude responses recorded.</p>
+              `}
             </div>
           </div>
 
@@ -1537,7 +1650,7 @@ const CareerAssessmentPage = () => {
                   </p>
                   <p className="text-lg text-gray-700 leading-relaxed">
                     Through an exciting exploration of your <strong>Multiple Intelligences</strong>, <strong>Personality</strong>,
-                    <strong> Work Interests</strong>, and <strong>Aptitude</strong>, SCOPE helps you understand what makes you unique — and connects
+                    <strong> Work Interests</strong>, and <strong>Interest &amp; Confidence (Self-Reported)</strong>, SCOPE helps you understand what makes you unique — and connects
                     you to careers that match your strengths and passions.
                   </p>
                 </div>
@@ -1568,8 +1681,8 @@ const CareerAssessmentPage = () => {
                   <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-2xl border border-green-100 flex items-start space-x-4">
                     <div className="h-10 w-10 text-green-700 flex items-center justify-center mt-1">📈</div>
                     <div>
-                      <h3 className="text-2xl font-bold text-green-700 mb-2">Aptitude Analysis</h3>
-                      <p className="text-gray-600">Measure your natural abilities and potential for success in different career fields.</p>
+                      <h3 className="text-2xl font-bold text-green-700 mb-2">Interest &amp; Confidence (Self-Reported)</h3>
+                      <p className="text-gray-600">Capture your self-reported interests and confidence levels across key skill areas.</p>
                     </div>
                   </div>
                 </div>
@@ -1692,6 +1805,8 @@ const CareerAssessmentPage = () => {
   }
 
   const currentQuestion = questions[currentStep];
+  const isObjectiveQuestion = currentQuestion?.type === 'objective';
+  const activeOptions = isObjectiveQuestion ? getObjectiveOptions(currentQuestion) : responseOptions;
 
   return (
     <div className="min-h-screen bg-teal-600">
@@ -1752,7 +1867,12 @@ const CareerAssessmentPage = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3 mb-8">
-              {responseOptions.map((option) => (
+              {isObjectiveQuestion && activeOptions.length === 0 && (
+                <div className="text-sm text-red-600">
+                  Objective options are missing for this question.
+                </div>
+              )}
+              {activeOptions.map((option) => (
                 <label
                   key={option.value}
                   className={`flex items-center p-4 rounded-lg border-2 cursor-pointer transition-all hover:border-blue-300 ${
@@ -1796,7 +1916,7 @@ const CareerAssessmentPage = () => {
               
               <Button
                 onClick={nextStep}
-                disabled={!answers[currentQuestion.id]}
+                disabled={answers[currentQuestion.id] == null}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2"
               >
                 {currentStep === questions.length - 1 ? 'Complete Assessment' : 'Next'}

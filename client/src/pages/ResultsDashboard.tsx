@@ -48,6 +48,11 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, onGenerate
     APTITUDE: Target
   };
 
+  const getDomainLabel = (domain: string) => {
+    if (domain === 'APTITUDE') return 'Interest & Confidence (Self-Reported)';
+    return domain;
+  };
+
   const RadarChart: React.FC<{ data: { [key: string]: number }; domain: string }> = ({ data, domain }) => {
     const center = 150;
     const radius = 120;
@@ -73,7 +78,7 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, onGenerate
     return (
       <div className="bg-white rounded-xl p-6 shadow-lg">
         <h3 className="text-lg font-semibold mb-4 text-center" style={{ color: domainColors[domain as keyof typeof domainColors] }}>
-          {domain} Profile
+          {getDomainLabel(domain)} Profile
         </h3>
         <svg width="300" height="300" className="mx-auto">
           {/* Grid circles */}
@@ -155,7 +160,7 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, onGenerate
     return (
       <div className="bg-white rounded-xl p-6 shadow-lg">
         <h3 className="text-lg font-semibold mb-4" style={{ color: domainColors[domain as keyof typeof domainColors] }}>
-          {domain} Breakdown
+          {getDomainLabel(domain)} Breakdown
         </h3>
         <div className="space-y-4">
           {Object.entries(data).map(([key, value]) => (
