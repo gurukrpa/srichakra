@@ -28,6 +28,7 @@ type AssessmentItem = {
   type?: 'likert' | 'objective';
   correctAnswer?: any;
   maxScore?: number;
+  category?: 'numerical' | 'logical' | 'verbal' | 'spatial';
   careerClusters?: string[];
   options?: Array<string | { label: string; value: any }>;
 };
@@ -67,6 +68,7 @@ const CareerAssessmentPage = () => {
     type: q.type || (q.correctAnswer !== undefined ? 'objective' : 'likert'),
     correctAnswer: q.correctAnswer,
     maxScore: typeof q.maxScore === 'number' ? q.maxScore : (q.maxScore ? Number(q.maxScore) : undefined),
+    category: q.category,
     careerClusters: Array.isArray(q.careerClusters) ? q.careerClusters : (q.careerClusters ? String(q.careerClusters).split(/[,;|]/).map((s:string)=>s.trim()).filter(Boolean) : []),
     options: Array.isArray(q.options) ? q.options : (Array.isArray(q.choices) ? q.choices : undefined),
   }));
@@ -196,6 +198,12 @@ const CareerAssessmentPage = () => {
       'Verbal Reasoning',
       'Spatial Reasoning'
     ];
+    const aptitudeCategoryMap: Record<string, string> = {
+      numerical: 'Numerical Aptitude',
+      logical: 'Logical Reasoning',
+      verbal: 'Verbal Reasoning',
+      spatial: 'Spatial Reasoning'
+    };
     const normalizeCategory = (value?: string) => (value || '').trim().toLowerCase();
     const aptitudeAbilityScores: Record<string, { correct: number; total: number; percent: number }> = {};
     aptitudeCategoryLabels.forEach((label) => {
@@ -203,7 +211,8 @@ const CareerAssessmentPage = () => {
     });
 
     objectiveQuestions.forEach((q) => {
-      const category = aptitudeCategoryLabels.find((label) => normalizeCategory(label) === normalizeCategory(q.subDomain || q.domain));
+      const categoryFromTag = aptitudeCategoryMap[normalizeCategory((q as any).category)];
+      const category = categoryFromTag || aptitudeCategoryLabels.find((label) => normalizeCategory(label) === normalizeCategory(q.subDomain || q.domain));
       if (!category) return;
       const ans = answers[q.id];
       if (ans === undefined || ans === null) return;
@@ -219,6 +228,9 @@ const CareerAssessmentPage = () => {
       const entry = aptitudeAbilityScores[label];
       entry.percent = Math.round((entry.correct / aptitudeQuestionsPerCategory) * 100);
     });
+    const aptitudeTotalCorrect = aptitudeCategoryLabels.reduce((sum, label) => sum + aptitudeAbilityScores[label].correct, 0);
+    const aptitudeTotalQuestions = aptitudeCategoryLabels.length * aptitudeQuestionsPerCategory;
+    const aptitudeTotalPercent = Math.round((aptitudeTotalCorrect / aptitudeTotalQuestions) * 100);
     // VAK learning style scoring based on selected indicators
     const VAK_MAP: Record<'Visual' | 'Auditory' | 'Kinesthetic', number[]> = {
       Visual: [9, 34, 45],
@@ -281,6 +293,17 @@ const CareerAssessmentPage = () => {
         total: aptitudeAbilityScores[label].total,
         percent: aptitudeAbilityScores[label].percent
       })),
+      aptitudeSummary: {
+        totalCorrect: aptitudeTotalCorrect,
+        totalQuestions: aptitudeTotalQuestions,
+        totalPercent: aptitudeTotalPercent,
+        categories: aptitudeCategoryLabels.map((label) => ({
+          label,
+          correct: aptitudeAbilityScores[label].correct,
+          total: aptitudeQuestionsPerCategory,
+          percent: aptitudeAbilityScores[label].percent
+        }))
+      },
       careerClusters: {
         fromDomain: clusterScoresFromDomain,
         fromItems: clusterScoresFromItems,
@@ -363,19 +386,60 @@ const CareerAssessmentPage = () => {
       addLine('Final outcomes depend on marks, eligibility, entrance exams, and institutional criteria.', 20);
       y += 2;
       addLine('After Class 10 — Subject Stream Guidance:', 14);
-      addLine('Investigative + Logical aptitude → Science (PCM / PCB): Analytical and scientific thinking.', 20);
-      addLine('Numerical + Structured preference → Commerce (with Maths): Accuracy and financial logic.', 20);
-      addLine('Verbal + Social inclination → Arts / Humanities: Expression, reasoning, social studies.', 20);
-      addLine('Artistic + Visual/Spatial → Arts / Design streams: Creative and visual strengths.', 20);
-      addLine('Mixed strengths → Flexible / Hybrid: Exploration before specialization.', 20);
+      addLine('The pathways below are shown in an order that reflects your current aptitude strengths and interest profile.', 20);
+      addLine('Options listed later may require additional skill development over time but remain possible.', 20);
+      const aptitudeSummaryForOrder = reportData?.aptitudeSummary;
+      const labelToKey: Record<string, 'numerical' | 'logical' | 'verbal' | 'spatial' | null> = {
+        'Numerical Aptitude': 'numerical',
+        'Logical Reasoning': 'logical',
+        'Verbal Reasoning': 'verbal',
+        'Spatial Reasoning': 'spatial'
+      };
+      const orderedCats = aptitudeSummaryForOrder?.categories
+        ? [...aptitudeSummaryForOrder.categories].sort((a: any, b: any) => (b.percent || 0) - (a.percent || 0))
+        : [];
+      const rank: Record<string, number> = {};
+      orderedCats.forEach((entry: any, index: number) => {
+        const key = labelToKey[entry.label] || null;
+        if (key) rank[key] = index;
+      });
+      const bucketFor = (keys: Array<'numerical' | 'logical' | 'verbal' | 'spatial'>) => {
+        const bestRank = Math.min(...keys.map((k) => (rank[k] ?? 99)));
+        if (bestRank <= 1) return 'strong';
+        if (bestRank === 2) return 'develop';
+        return 'explore';
+      };
+      const class10Lines = [
+        { bucket: bucketFor(['logical', 'numerical']), text: 'Investigative + Logical aptitude → Science (PCM / PCB): Analytical and scientific thinking.' },
+        { bucket: bucketFor(['numerical']), text: 'Numerical + Structured preference → Commerce (with Maths): Accuracy and financial logic.' },
+        { bucket: bucketFor(['verbal']), text: 'Verbal + Social inclination → Arts / Humanities: Expression, reasoning, social studies.' },
+        { bucket: bucketFor(['spatial', 'verbal']), text: 'Artistic + Visual/Spatial → Arts / Design streams: Creative and visual strengths.' },
+        { bucket: 'explore', text: 'Mixed strengths → Flexible / Hybrid: Exploration before specialization.' }
+      ];
+      addLine('Strongly Aligned Based on Current Ability:', 14);
+      class10Lines.filter((entry) => entry.bucket === 'strong').forEach((entry) => addLine(entry.text, 20));
+      addLine('Aligned with Skill Development:', 14);
+      class10Lines.filter((entry) => entry.bucket === 'develop').forEach((entry) => addLine(entry.text, 20));
+      addLine('Exploratory / Long-Term Options:', 14);
+      class10Lines.filter((entry) => entry.bucket === 'explore').forEach((entry) => addLine(entry.text, 20));
       y += 2;
       addLine('After Class 12 — Course Family Alignment:', 14);
-      addLine('Health & Life Sciences → Medical & Biological Sciences: Medicine, Allied Health, Biotechnology.', 20);
-      addLine('Engineering & Technology → Engineering & Applied Sciences: Engineering, Computer Science, AI.', 20);
-      addLine('Business & Commerce → Commerce & Finance: CA, Economics, Accounting, Management.', 20);
-      addLine('Law & Public Service → Law & Governance: Law, Policy, Civil Services.', 20);
-      addLine('Arts & Communication → Media & Creative Fields: Design, Media, Journalism.', 20);
-      addLine('Education & Social Services → Education & Human Development: Teaching, Psychology, Social Work.', 20);
+      addLine('The pathways below are shown in an order that reflects your current aptitude strengths and interest profile.', 20);
+      addLine('Options listed later may require additional skill development over time but remain possible.', 20);
+      const class12Lines = [
+        { bucket: bucketFor(['verbal', 'logical']), text: 'Health & Life Sciences → Medical & Biological Sciences: Medicine, Allied Health, Biotechnology.' },
+        { bucket: bucketFor(['numerical', 'logical']), text: 'Engineering & Technology → Engineering & Applied Sciences: Engineering, Computer Science, AI.' },
+        { bucket: bucketFor(['numerical']), text: 'Business & Commerce → Commerce & Finance: CA, Economics, Accounting, Management.' },
+        { bucket: bucketFor(['verbal']), text: 'Law & Public Service → Law & Governance: Law, Policy, Civil Services.' },
+        { bucket: bucketFor(['verbal', 'spatial']), text: 'Arts & Communication → Media & Creative Fields: Design, Media, Journalism.' },
+        { bucket: bucketFor(['verbal']), text: 'Education & Social Services → Education & Human Development: Teaching, Psychology, Social Work.' }
+      ];
+      addLine('Strongly Aligned Based on Current Ability:', 14);
+      class12Lines.filter((entry) => entry.bucket === 'strong').forEach((entry) => addLine(entry.text, 20));
+      addLine('Aligned with Skill Development:', 14);
+      class12Lines.filter((entry) => entry.bucket === 'develop').forEach((entry) => addLine(entry.text, 20));
+      addLine('Exploratory / Long-Term Options:', 14);
+      class12Lines.filter((entry) => entry.bucket === 'explore').forEach((entry) => addLine(entry.text, 20));
       addLine('Examples are for awareness only. Final eligibility depends on academic performance, entrance exams, and institutional criteria.', 20);
       y += 2;
       addLine('Aptitude Readiness Note:', 14);
@@ -383,6 +447,22 @@ const CareerAssessmentPage = () => {
       addLine('Verbal aptitude supports readiness for law and humanities.', 20);
       addLine('Logical aptitude supports readiness for science and technology.', 20);
       addLine('Skills can be developed over time with practice and guidance.', 20);
+      const aptitudeSummary = reportData?.aptitudeSummary;
+      if (aptitudeSummary) {
+        y += 2;
+        addLine('Aptitude Ability Snapshot:', 14);
+        addLine(`Total: ${aptitudeSummary.totalCorrect}/${aptitudeSummary.totalQuestions} (${aptitudeSummary.totalPercent}%)`, 20);
+        (aptitudeSummary.categories || []).forEach((entry: any) => {
+          addLine(`${entry.label}: ${entry.correct}/${entry.total} (${entry.percent}%)`, 20);
+        });
+        y += 2;
+        addLine('Pathway Validation Notes (Guidance):', 14);
+        addLine('Engineering → Numerical + Logical support', 20);
+        addLine('Medicine → Verbal + Logical support', 20);
+        addLine('Law → Verbal support', 20);
+        addLine('CA/Commerce → Numerical support', 20);
+        addLine('Media/Design → Verbal + Spatial support', 20);
+      }
       if (Array.isArray(reportData?.aptitudeAbility) && reportData.aptitudeAbility.length) {
         if (y > 270) { doc.addPage(); y = 20; }
         doc.text('Aptitude Ability Assessment (Grades 8–12):', 14, y);
@@ -443,7 +523,18 @@ const CareerAssessmentPage = () => {
     { label: 'Logical Reasoning', correct: 2, total: 4, percent: 50 },
     { label: 'Verbal Reasoning', correct: 3, total: 4, percent: 75 },
     { label: 'Spatial Reasoning', correct: 4, total: 4, percent: 100 }
-  ]
+  ],
+  aptitudeSummary: {
+    totalCorrect: 12,
+    totalQuestions: 16,
+    totalPercent: 75,
+    categories: [
+      { label: 'Numerical Aptitude', correct: 3, total: 4, percent: 75 },
+      { label: 'Logical Reasoning', correct: 2, total: 4, percent: 50 },
+      { label: 'Verbal Reasoning', correct: 3, total: 4, percent: 75 },
+      { label: 'Spatial Reasoning', correct: 4, total: 4, percent: 100 }
+    ]
+  }
     };
     
     generatePDFWithData(sampleReport, true);
@@ -476,6 +567,114 @@ const CareerAssessmentPage = () => {
     }).join('');
 
     const aptitudeAbility = Array.isArray(reportData?.aptitudeAbility) ? reportData.aptitudeAbility : [];
+    const aptitudeSummary = reportData?.aptitudeSummary || null;
+    const aptitudeLabelToKey: Record<string, 'numerical' | 'logical' | 'verbal' | 'spatial' | null> = {
+      'Numerical Aptitude': 'numerical',
+      'Logical Reasoning': 'logical',
+      'Verbal Reasoning': 'verbal',
+      'Spatial Reasoning': 'spatial'
+    };
+    const aptitudeOrder = aptitudeSummary?.categories
+      ? [...aptitudeSummary.categories].sort((a: any, b: any) => (b.percent || 0) - (a.percent || 0))
+      : [];
+    const aptitudeRank: Record<string, number> = {};
+    aptitudeOrder.forEach((entry: any, index: number) => {
+      const key = aptitudeLabelToKey[entry.label] || null;
+      if (key) aptitudeRank[key] = index;
+    });
+    const getReadinessBucket = (keys: Array<'numerical' | 'logical' | 'verbal' | 'spatial'>) => {
+      const ranks = keys.map((k) => (aptitudeRank[k] ?? 99));
+      const bestRank = Math.min(...ranks);
+      if (bestRank <= 1) return 'strong';
+      if (bestRank === 2) return 'develop';
+      return 'explore';
+    };
+    const class10Entries = [
+      {
+        key: 'science',
+        bucket: getReadinessBucket(['logical', 'numerical']),
+        signal: 'Investigative + Logical aptitude',
+        stream: 'Science (PCM / PCB)',
+        rationale: 'Analytical and scientific thinking'
+      },
+      {
+        key: 'commerce',
+        bucket: getReadinessBucket(['numerical']),
+        signal: 'Numerical + Structured preference',
+        stream: 'Commerce (with Maths)',
+        rationale: 'Accuracy, financial logic'
+      },
+      {
+        key: 'arts',
+        bucket: getReadinessBucket(['verbal']),
+        signal: 'Verbal + Social inclination',
+        stream: 'Arts / Humanities',
+        rationale: 'Expression, reasoning, social studies'
+      },
+      {
+        key: 'design',
+        bucket: getReadinessBucket(['spatial', 'verbal']),
+        signal: 'Artistic + Visual/Spatial',
+        stream: 'Arts / Design streams',
+        rationale: 'Creative and visual strengths'
+      },
+      {
+        key: 'hybrid',
+        bucket: 'explore',
+        signal: 'Mixed strengths',
+        stream: 'Flexible / Hybrid',
+        rationale: 'Exploration before specialization'
+      }
+    ];
+    const class12Entries = [
+      {
+        key: 'health',
+        bucket: getReadinessBucket(['verbal', 'logical']),
+        cluster: 'Health & Life Sciences',
+        family: 'Medical & Biological Sciences',
+        examples: 'Medicine, Allied Health, Biotechnology'
+      },
+      {
+        key: 'engineering',
+        bucket: getReadinessBucket(['numerical', 'logical']),
+        cluster: 'Engineering & Technology',
+        family: 'Engineering & Applied Sciences',
+        examples: 'Engineering, Computer Science, AI'
+      },
+      {
+        key: 'commerce',
+        bucket: getReadinessBucket(['numerical']),
+        cluster: 'Business & Commerce',
+        family: 'Commerce & Finance',
+        examples: 'CA, Economics, Accounting, Management'
+      },
+      {
+        key: 'law',
+        bucket: getReadinessBucket(['verbal']),
+        cluster: 'Law & Public Service',
+        family: 'Law & Governance',
+        examples: 'Law, Policy, Civil Services'
+      },
+      {
+        key: 'media',
+        bucket: getReadinessBucket(['verbal', 'spatial']),
+        cluster: 'Arts & Communication',
+        family: 'Media & Creative Fields',
+        examples: 'Design, Media, Journalism'
+      },
+      {
+        key: 'education',
+        bucket: getReadinessBucket(['verbal']),
+        cluster: 'Education & Social Services',
+        family: 'Education & Human Development',
+        examples: 'Teaching, Psychology, Social Work'
+      }
+    ];
+    const groupLabels = {
+      strong: 'Strongly Aligned Based on Current Ability',
+      develop: 'Aligned with Skill Development',
+      explore: 'Exploratory / Long-Term Options'
+    };
     const aptitudeChartHeight = aptitudeAbility.length * 45 + 60;
     const aptitudeBarChartSVG = aptitudeAbility.map((entry: any, index: number) => {
       const percentage = Math.max(0, Math.min(100, Number(entry.percent) || 0));
@@ -904,6 +1103,36 @@ const CareerAssessmentPage = () => {
                 <p style="color: #666; font-size: 0.95em;">No objective aptitude responses recorded.</p>
               `}
             </div>
+
+            <h2>Aptitude Ability Snapshot</h2>
+            <div style="background: #eef7ff; padding: 22px; border-radius: 15px; border-left: 5px solid #5390D9; margin-bottom: 25px;">
+              <p style="margin: 0 0 12px 0; color: #444; line-height: 1.6;">
+                This snapshot summarizes objective aptitude performance across four skill areas. It is guidance only and does not indicate pass/fail outcomes.
+              </p>
+              ${aptitudeSummary ? `
+                <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+                  ${aptitudeSummary.categories.map((entry: any) => `
+                    <div style="background: white; padding: 12px 14px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); min-width: 200px;">
+                      <div style="font-weight: 700; color: #006D77;">${entry.label}</div>
+                      <div style="color: #555; font-size: 0.95em;">${entry.correct}/${entry.total} • ${entry.percent}%</div>
+                    </div>
+                  `).join('')}
+                </div>
+                <div style="color: #333; font-weight: 600;">Total: ${aptitudeSummary.totalCorrect}/${aptitudeSummary.totalQuestions} (${aptitudeSummary.totalPercent}%)</div>
+              ` : `
+                <div style="color: #666;">Aptitude summary not available.</div>
+              `}
+              <div style="margin-top: 14px; background: white; padding: 14px; border-radius: 10px;">
+                <h3 style="margin: 0 0 8px 0; color: #2d5a5e;">Pathway Validation Notes (Guidance)</h3>
+                <ul style="margin: 0; padding-left: 20px; color: #444; line-height: 1.6;">
+                  <li>Engineering → Numerical + Logical support</li>
+                  <li>Medicine → Verbal + Logical support</li>
+                  <li>Law → Verbal support</li>
+                  <li>CA/Commerce → Numerical support</li>
+                  <li>Media/Design → Verbal + Spatial support</li>
+                </ul>
+              </div>
+            </div>
           </div>
 
           <!-- Page 3: Domain Distribution & Brain Analysis -->
@@ -1146,6 +1375,9 @@ const CareerAssessmentPage = () => {
             </p>
 
             <h3>After Class 10 — Subject Stream Guidance</h3>
+            <p style="font-size: 1em; line-height: 1.6; color: #555; margin: 10px 0 15px;">
+              The pathways below are shown in an order that reflects your current aptitude strengths and interest profile. Options listed later may require additional skill development over time but remain possible.
+            </p>
             <table style="width: 100%; border-collapse: collapse; margin: 15px 0 25px; font-size: 0.95em;">
               <thead>
                 <tr style="background: #006D77; color: white;">
@@ -1155,35 +1387,27 @@ const CareerAssessmentPage = () => {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Investigative + Logical aptitude</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Science (PCM / PCB)</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Analytical and scientific thinking</td>
-                </tr>
-                <tr style="background: #f8f9fa;">
-                  <td style="padding: 10px; border: 1px solid #ddd;">Numerical + Structured preference</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Commerce (with Maths)</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Accuracy, financial logic</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Verbal + Social inclination</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Arts / Humanities</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Expression, reasoning, social studies</td>
-                </tr>
-                <tr style="background: #f8f9fa;">
-                  <td style="padding: 10px; border: 1px solid #ddd;">Artistic + Visual/Spatial</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Arts / Design streams</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Creative and visual strengths</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Mixed strengths</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Flexible / Hybrid</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Exploration before specialization</td>
-                </tr>
+                ${(['strong', 'develop', 'explore'] as const).map((bucket, bucketIndex) => `
+                  <tr>
+                    <td colspan="3" style="padding: 10px; border: 1px solid #ddd; background: #f0f7f7; font-weight: bold; color: #006D77;">
+                      ${groupLabels[bucket]}
+                    </td>
+                  </tr>
+                  ${class10Entries.filter((entry) => entry.bucket === bucket).map((entry, rowIndex) => `
+                    <tr style="background: ${(bucketIndex + rowIndex) % 2 === 0 ? '#ffffff' : '#f8f9fa'};">
+                      <td style="padding: 10px; border: 1px solid #ddd;">${entry.signal}</td>
+                      <td style="padding: 10px; border: 1px solid #ddd;">${entry.stream}</td>
+                      <td style="padding: 10px; border: 1px solid #ddd;">${entry.rationale}</td>
+                    </tr>
+                  `).join('')}
+                `).join('')}
               </tbody>
             </table>
 
             <h3>After Class 12 — Course Family Alignment</h3>
+            <p style="font-size: 1em; line-height: 1.6; color: #555; margin: 10px 0 15px;">
+              The pathways below are shown in an order that reflects your current aptitude strengths and interest profile. Options listed later may require additional skill development over time but remain possible.
+            </p>
             <table style="width: 100%; border-collapse: collapse; margin: 15px 0 10px; font-size: 0.95em;">
               <thead>
                 <tr style="background: #006D77; color: white;">
@@ -1193,36 +1417,20 @@ const CareerAssessmentPage = () => {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Health &amp; Life Sciences</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Medical &amp; Biological Sciences</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Medicine, Allied Health, Biotechnology</td>
-                </tr>
-                <tr style="background: #f8f9fa;">
-                  <td style="padding: 10px; border: 1px solid #ddd;">Engineering &amp; Technology</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Engineering &amp; Applied Sciences</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Engineering, Computer Science, AI</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Business &amp; Commerce</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Commerce &amp; Finance</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">CA, Economics, Accounting, Management</td>
-                </tr>
-                <tr style="background: #f8f9fa;">
-                  <td style="padding: 10px; border: 1px solid #ddd;">Law &amp; Public Service</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Law &amp; Governance</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Law, Policy, Civil Services</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Arts &amp; Communication</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Media &amp; Creative Fields</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Design, Media, Journalism</td>
-                </tr>
-                <tr style="background: #f8f9fa;">
-                  <td style="padding: 10px; border: 1px solid #ddd;">Education &amp; Social Services</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Education &amp; Human Development</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;">Teaching, Psychology, Social Work</td>
-                </tr>
+                ${(['strong', 'develop', 'explore'] as const).map((bucket, bucketIndex) => `
+                  <tr>
+                    <td colspan="3" style="padding: 10px; border: 1px solid #ddd; background: #f0f7f7; font-weight: bold; color: #006D77;">
+                      ${groupLabels[bucket]}
+                    </td>
+                  </tr>
+                  ${class12Entries.filter((entry) => entry.bucket === bucket).map((entry, rowIndex) => `
+                    <tr style="background: ${(bucketIndex + rowIndex) % 2 === 0 ? '#ffffff' : '#f8f9fa'};">
+                      <td style="padding: 10px; border: 1px solid #ddd;">${entry.cluster}</td>
+                      <td style="padding: 10px; border: 1px solid #ddd;">${entry.family}</td>
+                      <td style="padding: 10px; border: 1px solid #ddd;">${entry.examples}</td>
+                    </tr>
+                  `).join('')}
+                `).join('')}
               </tbody>
             </table>
             <p style="font-size: 0.95em; color: #666; margin-bottom: 20px;">
