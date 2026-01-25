@@ -353,6 +353,36 @@ const CareerAssessmentPage = () => {
         });
         y += 4;
       }
+      const addLine = (text: string, indent: number = 14) => {
+        if (y > 270) { doc.addPage(); y = 20; }
+        doc.text(text, indent, y);
+        y += 6;
+      };
+      addLine('Academic Pathway Alignment (Guidance for Grades 8–12):');
+      addLine('This guidance supports subject and course planning and does not decide careers.', 20);
+      addLine('Final outcomes depend on marks, eligibility, entrance exams, and institutional criteria.', 20);
+      y += 2;
+      addLine('After Class 10 — Subject Stream Guidance:', 14);
+      addLine('Investigative + Logical aptitude → Science (PCM / PCB): Analytical and scientific thinking.', 20);
+      addLine('Numerical + Structured preference → Commerce (with Maths): Accuracy and financial logic.', 20);
+      addLine('Verbal + Social inclination → Arts / Humanities: Expression, reasoning, social studies.', 20);
+      addLine('Artistic + Visual/Spatial → Arts / Design streams: Creative and visual strengths.', 20);
+      addLine('Mixed strengths → Flexible / Hybrid: Exploration before specialization.', 20);
+      y += 2;
+      addLine('After Class 12 — Course Family Alignment:', 14);
+      addLine('Health & Life Sciences → Medical & Biological Sciences: Medicine, Allied Health, Biotechnology.', 20);
+      addLine('Engineering & Technology → Engineering & Applied Sciences: Engineering, Computer Science, AI.', 20);
+      addLine('Business & Commerce → Commerce & Finance: CA, Economics, Accounting, Management.', 20);
+      addLine('Law & Public Service → Law & Governance: Law, Policy, Civil Services.', 20);
+      addLine('Arts & Communication → Media & Creative Fields: Design, Media, Journalism.', 20);
+      addLine('Education & Social Services → Education & Human Development: Teaching, Psychology, Social Work.', 20);
+      addLine('Examples are for awareness only. Final eligibility depends on academic performance, entrance exams, and institutional criteria.', 20);
+      y += 2;
+      addLine('Aptitude Readiness Note:', 14);
+      addLine('Numerical aptitude supports readiness for engineering and commerce.', 20);
+      addLine('Verbal aptitude supports readiness for law and humanities.', 20);
+      addLine('Logical aptitude supports readiness for science and technology.', 20);
+      addLine('Skills can be developed over time with practice and guidance.', 20);
       if (Array.isArray(reportData?.aptitudeAbility) && reportData.aptitudeAbility.length) {
         if (y > 270) { doc.addPage(); y = 20; }
         doc.text('Aptitude Ability Assessment (Grades 8–12):', 14, y);
@@ -1092,6 +1122,122 @@ const CareerAssessmentPage = () => {
                 </div>
               </div>
             `}).join('')}
+
+            <h2>Career Clusters</h2>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 5px solid #83C5BE; margin-bottom: 25px;">
+              <p style="margin: 0 0 10px 0; color: #555; line-height: 1.6;">
+                These clusters summarize areas worth exploring based on interests, preferences, and demonstrated abilities. They are indicative, not final decisions.
+              </p>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+                ${Array.isArray(reportData?.suggestedClusters) && reportData.suggestedClusters.length ? reportData.suggestedClusters.map((c: any, i: number) => `
+                  <div style="background: white; padding: 14px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                    <div style="font-weight: bold; color: #006D77;">${i + 1}. ${c.name}</div>
+                    <div style="font-size: 0.9em; color: #666;">Overall alignment: ${c.combinedPercent ?? c.percent ?? '-'}%</div>
+                  </div>
+                `).join('') : `
+                  <div style="background: white; padding: 14px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); color: #666;">No cluster data available.</div>
+                `}
+              </div>
+            </div>
+
+            <h2>Academic Pathway Alignment (Guidance for Grades 8–12)</h2>
+            <p style="font-size: 1.05em; line-height: 1.7; color: #555; margin-bottom: 20px;">
+              This guidance supports subject and course planning. It does not decide careers. Final outcomes depend on marks, eligibility, entrance exams, and institutional criteria.
+            </p>
+
+            <h3>After Class 10 — Subject Stream Guidance</h3>
+            <table style="width: 100%; border-collapse: collapse; margin: 15px 0 25px; font-size: 0.95em;">
+              <thead>
+                <tr style="background: #006D77; color: white;">
+                  <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Profile Signals</th>
+                  <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Subject Streams to Explore</th>
+                  <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Rationale</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Investigative + Logical aptitude</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Science (PCM / PCB)</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Analytical and scientific thinking</td>
+                </tr>
+                <tr style="background: #f8f9fa;">
+                  <td style="padding: 10px; border: 1px solid #ddd;">Numerical + Structured preference</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Commerce (with Maths)</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Accuracy, financial logic</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Verbal + Social inclination</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Arts / Humanities</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Expression, reasoning, social studies</td>
+                </tr>
+                <tr style="background: #f8f9fa;">
+                  <td style="padding: 10px; border: 1px solid #ddd;">Artistic + Visual/Spatial</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Arts / Design streams</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Creative and visual strengths</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Mixed strengths</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Flexible / Hybrid</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Exploration before specialization</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h3>After Class 12 — Course Family Alignment</h3>
+            <table style="width: 100%; border-collapse: collapse; margin: 15px 0 10px; font-size: 0.95em;">
+              <thead>
+                <tr style="background: #006D77; color: white;">
+                  <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Dominant Career Cluster(s)</th>
+                  <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Course Families to Explore</th>
+                  <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Examples (Awareness only)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Health &amp; Life Sciences</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Medical &amp; Biological Sciences</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Medicine, Allied Health, Biotechnology</td>
+                </tr>
+                <tr style="background: #f8f9fa;">
+                  <td style="padding: 10px; border: 1px solid #ddd;">Engineering &amp; Technology</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Engineering &amp; Applied Sciences</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Engineering, Computer Science, AI</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Business &amp; Commerce</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Commerce &amp; Finance</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">CA, Economics, Accounting, Management</td>
+                </tr>
+                <tr style="background: #f8f9fa;">
+                  <td style="padding: 10px; border: 1px solid #ddd;">Law &amp; Public Service</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Law &amp; Governance</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Law, Policy, Civil Services</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Arts &amp; Communication</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Media &amp; Creative Fields</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Design, Media, Journalism</td>
+                </tr>
+                <tr style="background: #f8f9fa;">
+                  <td style="padding: 10px; border: 1px solid #ddd;">Education &amp; Social Services</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Education &amp; Human Development</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">Teaching, Psychology, Social Work</td>
+                </tr>
+              </tbody>
+            </table>
+            <p style="font-size: 0.95em; color: #666; margin-bottom: 20px;">
+              Examples are for awareness only. Final eligibility depends on academic performance, entrance exams, and institutional criteria.
+            </p>
+
+            <div style="background: #eef7ff; border-left: 5px solid #5390D9; padding: 16px; border-radius: 10px; margin-bottom: 25px;">
+              <h3 style="margin: 0 0 8px 0; color: #2d5a5e;">Aptitude Readiness Note</h3>
+              <ul style="margin: 0; padding-left: 20px; color: #444; line-height: 1.6;">
+                <li>Numerical aptitude supports readiness for engineering and commerce.</li>
+                <li>Verbal aptitude supports readiness for law and humanities.</li>
+                <li>Logical aptitude supports readiness for science and technology.</li>
+                <li>Skills can be developed over time with practice and guidance.</li>
+              </ul>
+            </div>
 
             <h2>Next Steps & Recommendations</h2>
             <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; border-left: 5px solid #006D77;">
