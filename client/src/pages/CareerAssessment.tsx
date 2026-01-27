@@ -100,10 +100,14 @@ const CareerAssessmentPage = () => {
 
   const [questions, setQuestions] = useState<AssessmentItem[]>(transformQuestions(RAW_QUESTIONS));
 
-  const aptitudeQuestions = useMemo(
-    () => questions.filter((q) => q.type === 'objective' && q.id >= 201 && q.id <= 216),
-    [questions]
+  const fallbackAptitudeQuestions = useMemo(
+    () => transformQuestions(RAW_QUESTIONS).filter((q) => q.type === 'objective' && q.id >= 201 && q.id <= 216),
+    []
   );
+  const aptitudeQuestions = useMemo(() => {
+    const fromQuestions = questions.filter((q) => q.type === 'objective' && q.id >= 201 && q.id <= 216);
+    return fromQuestions.length ? fromQuestions : fallbackAptitudeQuestions;
+  }, [questions, fallbackAptitudeQuestions]);
   const assessmentQuestions = useMemo(
     () => questions.filter((q) => q.type !== 'objective'),
     [questions]
