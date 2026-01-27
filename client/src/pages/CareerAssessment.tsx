@@ -38,6 +38,8 @@ const CareerAssessmentPage = () => {
   const CAREER_ASSESSMENT_PAUSED = false;
   const [user, setUser] = useState<any>({ email: 'guest@local', fullName: 'Guest User', isGuest: true });
   const [currentStep, setCurrentStep] = useState(-1);
+  const [phase, setPhase] = useState<'aptitude' | 'assessment'>('aptitude');
+  const [currentAptitudeStep, setCurrentAptitudeStep] = useState(0);
   const [answers, setAnswers] = useState<Record<number, any>>({});
   const [isCompleted, setIsCompleted] = useState(false);
   const [report, setReport] = useState<{
@@ -98,6 +100,15 @@ const CareerAssessmentPage = () => {
 
   const [questions, setQuestions] = useState<AssessmentItem[]>(transformQuestions(RAW_QUESTIONS));
 
+  const aptitudeQuestions = useMemo(
+    () => questions.filter((q) => q.type === 'objective' && q.id >= 201 && q.id <= 216),
+    [questions]
+  );
+  const assessmentQuestions = useMemo(
+    () => questions.filter((q) => q.type !== 'objective'),
+    [questions]
+  );
+
   // Compute a stable seed per user (guest -> 'guest') and shuffle once user is known
   const userSeed = useMemo(() => seedFromString((user?.email || 'guest') + '-scope-v1'), [user?.email]);
   useEffect(() => {
@@ -137,20 +148,42 @@ const CareerAssessmentPage = () => {
     }
   }, []);
 
+  useEffect(() => {
+    if (phase === 'aptitude' && aptitudeQuestions.length === 0) {
+      setPhase('assessment');
+      setCurrentStep(0);
+    }
+  }, [phase, aptitudeQuestions.length]);
+
   const handleAnswer = (questionId: number, value: any) => {
     setAnswers(prev => ({ ...prev, [questionId]: value }));
   };
 
   const nextStep = () => {
+    if (phase === 'aptitude') {
+      const qid = aptitudeQuestions[currentAptitudeStep]?.id;
+      if (qid && answers[qid] == null) {
+        alert('Please select an answer to continue.');
+        return;
+      }
+      if (currentAptitudeStep < aptitudeQuestions.length - 1) {
+        setCurrentAptitudeStep(prev => prev + 1);
+        return;
+      }
+      setPhase('assessment');
+      setCurrentStep(0);
+      return;
+    }
+
     // Enforce an answer for the current question before proceeding
-    if (currentStep >= 0 && currentStep < questions.length) {
-      const qid = questions[currentStep]?.id;
+    if (currentStep >= 0 && currentStep < assessmentQuestions.length) {
+      const qid = assessmentQuestions[currentStep]?.id;
       if (qid && answers[qid] == null) {
         alert('Please select an answer to continue.');
         return;
       }
     }
-    if (currentStep < questions.length - 1) {
+    if (currentStep < assessmentQuestions.length - 1) {
       setCurrentStep(prev => prev + 1);
     } else {
       // Complete assessment
@@ -160,8 +193,21 @@ const CareerAssessmentPage = () => {
   };
 
   const prevStep = () => {
+    if (phase === 'aptitude') {
+      if (currentAptitudeStep > 0) {
+        setCurrentAptitudeStep(prev => prev - 1);
+        return;
+      }
+      setCurrentStep(-1);
+      return;
+    }
     if (currentStep > 0) {
       setCurrentStep(prev => prev - 1);
+      return;
+    }
+    if (currentStep === 0) {
+      setPhase('aptitude');
+      setCurrentAptitudeStep(Math.max(0, aptitudeQuestions.length - 1));
     }
   };
 
@@ -1895,7 +1941,9 @@ const CareerAssessmentPage = () => {
     w.document.close();
   };
 
-  const progress = ((currentStep + 1) / questions.length) * 100;
+  const progress = phase === 'aptitude'
+    ? ((currentAptitudeStep + 1) / Math.max(1, aptitudeQuestions.length)) * 100
+    : ((currentStep + 1) / Math.max(1, assessmentQuestions.length)) * 100;
 
   // If a maintenance window is desired later, toggle CAREER_ASSESSMENT_PAUSED back to true.
 
@@ -2138,7 +2186,15 @@ const CareerAssessmentPage = () => {
                   <h3 className="text-2xl font-semibold text-gray-800">Take the test. Discover yourself. Your future starts here!</h3>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3" onClick={() => setCurrentStep(0)}>
+                  <Button
+                    size="lg"
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3"
+                    onClick={() => {
+                      setPhase('aptitude');
+                      setCurrentAptitudeStep(0);
+                      setCurrentStep(0);
+                    }}
+                  >
                     Start Assessment
                   </Button>
                   <Link href="/">
@@ -2237,8 +2293,10 @@ const CareerAssessmentPage = () => {
     );
   }
 
-  const currentQuestion = questions[currentStep];
-  const isObjectiveQuestion = currentQuestion?.type === 'objective';
+  const currentQuestion = phase === 'aptitude'
+    ? aptitudeQuestions[currentAptitudeStep]
+    : assessmentQuestions[currentStep];
+  const isObjectiveQuestion = phase === 'aptitude' || currentQuestion?.type === 'objective';
   const activeOptions = isObjectiveQuestion ? getObjectiveOptions(currentQuestion) : responseOptions;
 
   return (
@@ -2264,7 +2322,11 @@ const CareerAssessmentPage = () => {
         {/* Header */}
         <div className="text-center mb-6 bg-white bg-opacity-90 rounded-xl p-4 max-w-md mx-auto">
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Career Assessment</h1>
-          <p className="text-gray-600">Question {currentStep + 1} of {questions.length}</p>
+          <p className="text-gray-600">
+            {phase === 'aptitude'
+              ? `Aptitude Question ${currentAptitudeStep + 1} of ${aptitudeQuestions.length}`
+              : `Question ${currentStep + 1} of ${assessmentQuestions.length}`}
+          </p>
           <div className="mt-3">
             <Button
               variant="outline"
@@ -2341,7 +2403,7 @@ const CareerAssessmentPage = () => {
               <Button
                 variant="outline"
                 onClick={prevStep}
-                disabled={currentStep === 0}
+                disabled={phase === 'aptitude' ? currentAptitudeStep === 0 && currentStep === -1 : currentStep === 0 && aptitudeQuestions.length === 0}
                 className="px-6 py-2"
               >
                 Previous
@@ -2352,7 +2414,9 @@ const CareerAssessmentPage = () => {
                 disabled={answers[currentQuestion.id] == null}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2"
               >
-                {currentStep === questions.length - 1 ? 'Complete Assessment' : 'Next'}
+                {phase === 'aptitude'
+                  ? (currentAptitudeStep === aptitudeQuestions.length - 1 ? 'Continue to Preferences' : 'Next')
+                  : (currentStep === assessmentQuestions.length - 1 ? 'Complete Assessment' : 'Next')}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
