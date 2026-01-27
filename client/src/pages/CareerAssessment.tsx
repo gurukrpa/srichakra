@@ -838,7 +838,7 @@ const CareerAssessmentPage = () => {
           <style>
             @page {
               size: A4;
-              margin: 15mm;
+              margin: 0;
             }
             
             @media print {
@@ -848,7 +848,10 @@ const CareerAssessmentPage = () => {
                 margin: 0; 
                 border-radius: 0; 
                 box-shadow: none;
-                padding: 20px;
+                width: 794px;
+                min-height: 1123px;
+                padding: 40px 50px;
+                box-sizing: border-box;
               }
             }
             
@@ -859,13 +862,13 @@ const CareerAssessmentPage = () => {
               color: #333;
             }
             .page { 
-              min-height: 297mm;
-              width: 210mm;
-              padding: 40px; 
+              min-height: 1123px;
+              width: 794px;
+              padding: 40px 50px; 
               background: white; 
-              margin: 20px auto; 
-              border-radius: 15px;
-              box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+              margin: 10px auto; 
+              border-radius: 10px;
+              box-shadow: 0 6px 20px rgba(0,0,0,0.08);
               page-break-after: always;
               box-sizing: border-box;
             }
@@ -875,8 +878,8 @@ const CareerAssessmentPage = () => {
             .header { 
               text-align: center; 
               border-bottom: 3px solid #006D77; 
-              padding-bottom: 20px; 
-              margin-bottom: 30px;
+              padding-bottom: 16px; 
+              margin-bottom: 18px;
             }
             .logo { 
               width: 80px; 
@@ -891,21 +894,25 @@ const CareerAssessmentPage = () => {
               font-size: 24px;
               font-weight: bold;
             }
-            h1 { color: #006D77; font-size: 2.5em; margin: 10px 0; }
-            h2 { color: #006D77; border-left: 5px solid #83C5BE; padding-left: 15px; }
-            h3 { color: #E29578; }
+            h1 { color: #006D77; font-size: 2.5em; margin: 6px 0 10px; }
+            h2 { color: #006D77; border-left: 5px solid #83C5BE; padding-left: 15px; margin: 18px 0 10px; page-break-after: avoid; }
+            h3 { color: #E29578; margin: 12px 0 8px; page-break-after: avoid; }
+            p { margin: 8px 0; }
+            ul { margin: 10px 0 0 20px; }
             .chart-container { 
               background: #f8f9fa; 
-              padding: 20px; 
+              padding: 16px; 
               border-radius: 10px; 
-              margin: 20px 0;
+              margin: 16px 0;
               text-align: center;
+              page-break-inside: avoid;
             }
             .brain-diagram {
               display: flex;
               justify-content: space-around;
               align-items: center;
-              margin: 30px 0;
+              margin: 20px 0;
+              page-break-inside: avoid;
             }
             .brain-half {
               text-align: center;
@@ -928,15 +935,17 @@ const CareerAssessmentPage = () => {
             .score-low { background: #FFDDD2; color: #333; }
             .recommendations {
               background: linear-gradient(135deg, #FFDDD2, #E29578);
-              padding: 25px;
+              padding: 18px;
               border-radius: 15px;
-              margin: 20px 0;
+              margin: 16px 0;
+              page-break-inside: avoid;
             }
             .career-grid {
               display: grid;
               grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
               gap: 15px;
-              margin-top: 20px;
+              margin-top: 12px;
+              page-break-inside: avoid;
             }
             .career-item {
               background: white;
@@ -949,14 +958,16 @@ const CareerAssessmentPage = () => {
               display: grid;
               grid-template-columns: repeat(4, 1fr);
               gap: 20px;
-              margin: 30px 0;
+              margin: 18px 0;
+              page-break-inside: avoid;
             }
             .stat-card {
               text-align: center;
-              padding: 20px;
+              padding: 16px;
               border-radius: 12px;
               background: linear-gradient(135deg, #83C5BE, #006D77);
               color: white;
+              page-break-inside: avoid;
             }
             .stat-number { font-size: 2.5em; font-weight: bold; }
             .stat-label { font-size: 0.9em; opacity: 0.9; }
@@ -964,6 +975,8 @@ const CareerAssessmentPage = () => {
               body { background: white; }
               .page { margin: 0; box-shadow: none; }
             }
+            table { page-break-inside: avoid; margin: 12px 0 18px !important; }
+            tr, td, th { page-break-inside: avoid; }
           </style>
         </head>
         <body>
