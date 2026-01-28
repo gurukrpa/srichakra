@@ -100,14 +100,11 @@ const CareerAssessmentPage = () => {
 
   const [questions, setQuestions] = useState<AssessmentItem[]>(transformQuestions(RAW_QUESTIONS));
 
-  const fallbackAptitudeQuestions = useMemo(
-    () => transformQuestions(RAW_QUESTIONS).filter((q) => q.type === 'objective' && q.id >= 201 && q.id <= 216),
-    []
+  // Only real aptitude questions, no fallback allowed
+  const aptitudeQuestions = useMemo(() =>
+    questions.filter((q) => q.type === 'objective' && q.id >= 201 && q.id <= 216),
+    [questions]
   );
-  const aptitudeQuestions = useMemo(() => {
-    const fromQuestions = questions.filter((q) => q.type === 'objective' && q.id >= 201 && q.id <= 216);
-    return fromQuestions.length ? fromQuestions : fallbackAptitudeQuestions;
-  }, [questions, fallbackAptitudeQuestions]);
   const assessmentQuestions = useMemo(
     () => questions.filter((q) => q.type !== 'objective'),
     [questions]
@@ -152,10 +149,12 @@ const CareerAssessmentPage = () => {
     }
   }, []);
 
+  // If no aptitude questions, block flow
   useEffect(() => {
-    if (phase === 'aptitude' && aptitudeQuestions.length === 0) {
-      setPhase('assessment');
-      setCurrentStep(0);
+    if (phase === 'aptitude' && aptitudeQuestions.length !== 16) {
+      alert('Aptitude section is required and must contain 16 questions. Please contact support.');
+      setCurrentStep(-1);
+      setPhase('aptitude');
     }
   }, [phase, aptitudeQuestions.length]);
 
@@ -172,6 +171,12 @@ const CareerAssessmentPage = () => {
       }
       if (currentAptitudeStep < aptitudeQuestions.length - 1) {
         setCurrentAptitudeStep(prev => prev + 1);
+        return;
+      }
+      // Only allow moving to preferences if all aptitude answered
+      const aptitudeAnswered = aptitudeQuestions.every(q => answers[q.id] != null);
+      if (!aptitudeAnswered) {
+        alert('Please complete the aptitude section to continue.');
         return;
       }
       setPhase('assessment');
@@ -216,6 +221,12 @@ const CareerAssessmentPage = () => {
   };
 
   const generateReport = () => {
+    // PDF safety guard: block if not all aptitude answered
+    const aptitudeAnswered = aptitudeQuestions.length === 16 && aptitudeQuestions.every(q => answers[q.id] != null);
+    if (!aptitudeAnswered) {
+      alert('Please complete the aptitude section to continue.');
+      return;
+    }
     // Scoring: mean per domain (after reverse keying), displayed on 0–5 scale; charts normalize to percent via /5
     const domainScores: Record<string, number[]> = {};
     const likertQuestions = questions.filter((q) => q.type !== 'objective');
