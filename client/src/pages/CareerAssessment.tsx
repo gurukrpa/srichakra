@@ -423,19 +423,31 @@ const CareerAssessmentPage = () => {
               color: #333;
             }
             .page { 
-              min-height: 100vh; 
-              padding: 40px; 
+              position: relative;
+              width: 794px;
+              min-height: 1123px; 
+              padding: 40px 50px; 
+              box-sizing: border-box;
+              display: flex;
+              flex-direction: column;
+              justify-content: flex-start;
               background: white; 
-              margin: 20px; 
+              margin: 20px auto; 
               border-radius: 15px;
               box-shadow: 0 10px 30px rgba(0,0,0,0.1);
               page-break-after: always;
+            }
+            .page:last-of-type {
+              page-break-after: auto;
+            }
+            .page > *:first-child {
+              margin-top: 0 !important;
             }
             .header { 
               text-align: center; 
               border-bottom: 3px solid #006D77; 
               padding-bottom: 20px; 
-              margin-bottom: 30px;
+              margin: 0 0 30px 0;
             }
             .logo { 
               width: 80px; 
@@ -450,21 +462,32 @@ const CareerAssessmentPage = () => {
               font-size: 24px;
               font-weight: bold;
             }
-            h1 { color: #006D77; font-size: 2.5em; margin: 10px 0; }
-            h2 { color: #006D77; border-left: 5px solid #83C5BE; padding-left: 15px; }
-            h3 { color: #E29578; }
+            h1 { color: #006D77; font-size: 2.5em; margin: 0 0 20px 0; }
+            h2 { color: #006D77; border-left: 5px solid #83C5BE; padding-left: 15px; margin: 24px 0 12px 0; page-break-after: avoid; }
+            h3 { color: #E29578; margin: 20px 0 10px 0; page-break-after: avoid; }
+            p { margin: 10px 0; }
+            ul { margin: 10px 0 10px 24px; padding: 0; }
+            ol { margin: 10px 0 10px 24px; padding: 0 0 0 20px; }
             .chart-container { 
               background: #f8f9fa; 
               padding: 20px; 
               border-radius: 10px; 
               margin: 20px 0;
               text-align: center;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex-direction: column;
+              width: 100%;
+              max-height: 420px;
+              page-break-inside: avoid;
             }
             .brain-diagram {
               display: flex;
               justify-content: space-around;
               align-items: center;
               margin: 30px 0;
+              page-break-inside: avoid;
             }
             .brain-half {
               text-align: center;
@@ -490,12 +513,24 @@ const CareerAssessmentPage = () => {
               padding: 25px;
               border-radius: 15px;
               margin: 20px 0;
+              page-break-inside: avoid;
+            }
+            .chart-wrapper {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              max-height: 420px;
+              min-height: 360px;
+              padding: 20px 0;
+              width: 100%;
+              page-break-inside: avoid;
             }
             .career-grid {
               display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-              gap: 15px;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 20px;
               margin-top: 20px;
+              page-break-inside: avoid;
             }
             .career-item {
               background: white;
@@ -503,12 +538,14 @@ const CareerAssessmentPage = () => {
               border-radius: 10px;
               box-shadow: 0 3px 10px rgba(0,0,0,0.1);
               text-align: center;
+              page-break-inside: avoid;
             }
             .summary-stats {
               display: grid;
               grid-template-columns: repeat(4, 1fr);
               gap: 20px;
               margin: 30px 0;
+              page-break-inside: avoid;
             }
             .stat-card {
               text-align: center;
@@ -519,9 +556,47 @@ const CareerAssessmentPage = () => {
             }
             .stat-number { font-size: 2.5em; font-weight: bold; }
             .stat-label { font-size: 0.9em; opacity: 0.9; }
+            .stat-split {
+              margin-top: -10px;
+              text-align: center;
+              font-size: 0.95em;
+              color: #006D77;
+            }
+            .five-senses-grid {
+              display: grid;
+              grid-template-columns: repeat(5, minmax(0, 1fr));
+              gap: 12px;
+              margin: 20px 0;
+              page-break-inside: avoid;
+            }
+            .sense-card {
+              padding: 12px 10px;
+              min-height: 110px;
+            }
+            .next-steps {
+              margin-top: 24px;
+              background: #f8f9fa;
+              padding: 25px;
+              border-radius: 15px;
+              border-left: 5px solid #006D77;
+              page-break-inside: avoid;
+            }
+            .page-footer {
+              margin-top: auto;
+              text-align: center;
+              padding: 20px;
+              background: linear-gradient(135deg, #83C5BE, #006D77);
+              border-radius: 15px;
+              color: white;
+              page-break-inside: avoid;
+            }
+            @page {
+              size: A4;
+              margin: 0;
+            }
             @media print {
               body { background: white; }
-              .page { margin: 0; box-shadow: none; }
+              .page { margin: 0 auto; box-shadow: none; }
             }
           </style>
         </head>
@@ -538,7 +613,7 @@ const CareerAssessmentPage = () => {
             
             <div class="summary-stats">
               <div class="stat-card">
-                <div class="stat-number">${totalAnswered}</div>
+                <div class="stat-number">76</div>
                 <div class="stat-label">Questions Answered</div>
               </div>
               <div class="stat-card">
@@ -554,6 +629,8 @@ const CareerAssessmentPage = () => {
                 <div class="stat-label">Completion Rate</div>
               </div>
             </div>
+
+            <p class="stat-split">Aptitude: 16 objective questions | Preferences: 60 self-reported questions</p>
 
             <h2>Your Top Strengths</h2>
             <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0;">
@@ -576,6 +653,22 @@ const CareerAssessmentPage = () => {
                 problem-solving approach, and career satisfaction factors.
               </p>
             </div>
+
+            <div class="recommendations" style="margin-top: 30px;">
+              <h3 style="margin-top: 0; color: #006D77;">Aptitude Ability Snapshot</h3>
+              <p style="font-size: 1.05em; line-height: 1.6;">
+                This section reflects objective ability-based questions that assess how you approach numbers, logic, language, and visual patterns. These questions have right or wrong answers and indicate current readiness areas, not fixed potential.
+              </p>
+              <ul style="font-size: 1.05em; line-height: 1.6; margin: 10px 0 15px 20px;">
+                <li>Numerical Reasoning</li>
+                <li>Logical Reasoning</li>
+                <li>Verbal Reasoning</li>
+                <li>Spatial Reasoning</li>
+              </ul>
+              <p style="font-size: 1.05em; line-height: 1.6;">
+                Aptitude results are used to support pathway readiness and do not determine careers.
+              </p>
+            </div>
           </div>
 
           <!-- Page 2: Detailed Charts -->
@@ -585,9 +678,10 @@ const CareerAssessmentPage = () => {
             </div>
 
             <h2>Domain Scores Breakdown</h2>
-            <div class="chart-container">
-              <h3>Bar Chart Analysis</h3>
-              <svg width="100%" height="${finalScores.length * 40 + 60}" viewBox="0 0 600 ${finalScores.length * 40 + 60}">
+            <div class="chart-wrapper">
+              <div class="chart-container">
+                <h3>Bar Chart Analysis</h3>
+                <svg width="100%" height="${finalScores.length * 40 + 60}" viewBox="0 0 600 ${finalScores.length * 40 + 60}">
                 <defs>
                   <linearGradient id="barGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" style="stop-color:#006D77;stop-opacity:1" />
@@ -595,17 +689,19 @@ const CareerAssessmentPage = () => {
                   </linearGradient>
                 </defs>
                 <text x="300" y="20" text-anchor="middle" font-size="16" font-weight="bold" fill="#006D77">
-                  Your Aptitude Scores (Scale: 1-5)
+                  Preference Domain Scores (Interest & Confidence)
                 </text>
                 ${barChartSVG}
                 <line x1="350" y1="30" x2="350" y2="${finalScores.length * 40 + 40}" stroke="#ddd" stroke-width="1"/>
                 <text x="355" y="35" font-size="10" fill="#666">Average (3.0)</text>
-              </svg>
+                </svg>
+              </div>
             </div>
 
-            <div class="chart-container">
-              <h3>Pie Chart Distribution</h3>
-              <svg width="100%" height="320" viewBox="0 0 300 320">
+            <div class="chart-wrapper">
+              <div class="chart-container">
+                <h3>Pie Chart Distribution</h3>
+                <svg width="100%" height="320" viewBox="0 0 300 320">
                 <text x="150" y="20" text-anchor="middle" font-size="16" font-weight="bold" fill="#006D77">
                   Domain Distribution
                 </text>
@@ -613,7 +709,8 @@ const CareerAssessmentPage = () => {
                 <circle cx="150" cy="150" r="40" fill="white" stroke="#006D77" stroke-width="3"/>
                 <text x="150" y="155" text-anchor="middle" font-size="14" font-weight="bold" fill="#006D77">Total</text>
                 <text x="150" y="170" text-anchor="middle" font-size="12" fill="#666">${total.toFixed(1)}</text>
-              </svg>
+                </svg>
+              </div>
             </div>
           </div>
 
@@ -672,24 +769,24 @@ const CareerAssessmentPage = () => {
             </div>
 
             <h2>Five Senses Learning Profile</h2>
-            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin: 20px 0;">
-              <div class="career-item" style="background: linear-gradient(135deg, #FF6B6B, #4ECDC4);">
+            <div class="five-senses-grid">
+              <div class="career-item sense-card" style="background: linear-gradient(135deg, #FF6B6B, #4ECDC4);">
                 <h4 style="color: white; margin: 0;">👁️ Visual</h4>
                 <p style="color: white; font-size: 0.9em;">Charts, diagrams, colors</p>
               </div>
-              <div class="career-item" style="background: linear-gradient(135deg, #45B7D1, #96CEB4);">
+              <div class="career-item sense-card" style="background: linear-gradient(135deg, #45B7D1, #96CEB4);">
                 <h4 style="color: white; margin: 0;">👂 Auditory</h4>
                 <p style="color: white; font-size: 0.9em;">Discussions, music, sounds</p>
               </div>
-              <div class="career-item" style="background: linear-gradient(135deg, #F39C12, #E67E22);">
+              <div class="career-item sense-card" style="background: linear-gradient(135deg, #F39C12, #E67E22);">
                 <h4 style="color: white; margin: 0;">✋ Kinesthetic</h4>
                 <p style="color: white; font-size: 0.9em;">Hands-on, movement</p>
               </div>
-              <div class="career-item" style="background: linear-gradient(135deg, #9B59B6, #8E44AD);">
+              <div class="career-item sense-card" style="background: linear-gradient(135deg, #9B59B6, #8E44AD);">
                 <h4 style="color: white; margin: 0;">👃 Olfactory</h4>
                 <p style="color: white; font-size: 0.9em;">Scents, environment</p>
               </div>
-              <div class="career-item" style="background: linear-gradient(135deg, #E74C3C, #C0392B);">
+              <div class="career-item sense-card" style="background: linear-gradient(135deg, #E74C3C, #C0392B);">
                 <h4 style="color: white; margin: 0;">👅 Gustatory</h4>
                 <p style="color: white; font-size: 0.9em;">Taste, experiential</p>
               </div>
@@ -703,8 +800,11 @@ const CareerAssessmentPage = () => {
             </div>
 
             <h2>Recommended Career Paths</h2>
+            <p style="font-size: 1.1em; color: #666; margin-bottom: 15px;">
+              The clusters below are suggested using interest patterns, personality preferences, and aptitude readiness together, for exploration and awareness.
+            </p>
             <p style="font-size: 1.1em; color: #666; margin-bottom: 30px;">
-              Based on your top domain scores, here are career suggestions aligned with your natural strengths:
+              These paths blend your strongest preference domains with the aptitude readiness confirmed in the objective stage, helping you match interest with proven capability:
             </p>
 
             ${topDomains.map((domain, index) => `
@@ -717,7 +817,7 @@ const CareerAssessmentPage = () => {
                     `<div class="career-item">
                       <strong>${career}</strong>
                       <p style="font-size: 0.9em; color: #666; margin: 5px 0 0 0;">
-                        High ${domain.domain.toLowerCase()} aptitude required
+                        Preference strength in ${domain.domain.toLowerCase()} with aptitude readiness confirmed
                       </p>
                     </div>`
                   ).join('')}
@@ -726,7 +826,7 @@ const CareerAssessmentPage = () => {
             `).join('')}
 
             <h2>Next Steps & Recommendations</h2>
-            <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; border-left: 5px solid #006D77;">
+            <div class="next-steps">
               <h3 style="margin-top: 0; color: #006D77;">Action Plan</h3>
               <ol style="font-size: 1.1em; line-height: 1.8;">
                 <li><strong>Explore Further:</strong> Research the recommended career paths that align with your top ${topDomains[0].domain} score.</li>
@@ -737,7 +837,7 @@ const CareerAssessmentPage = () => {
               </ol>
             </div>
 
-            <div style="margin-top: 40px; text-align: center; padding: 20px; background: linear-gradient(135deg, #83C5BE, #006D77); border-radius: 15px; color: white;">
+            <div class="page-footer">
               <h3 style="margin: 0 0 10px 0;">Thank You for Taking the Assessment</h3>
               <p style="margin: 0; opacity: 0.9;">This report is generated by Srichakra Academy's comprehensive career assessment system.</p>
               <p style="margin: 5px 0 0 0; font-size: 0.9em; opacity: 0.8;">For questions or consultation, contact us through our website.</p>
