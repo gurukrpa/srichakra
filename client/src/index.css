@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+@page {
+  size: A4;
+  margin: 0;
+}
+
+@media print {
+  body {
+    transform: scale(1);
+  }
+}
+
 /* Samarkan Font Declarations */
 @font-face {
   font-family: 'Samarkan';
