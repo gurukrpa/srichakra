@@ -9,10 +9,174 @@ import { getUserSession, isAuthenticated } from '@/lib/auth';
 import SrichakraText from '@/components/custom/SrichakraText';
 import sriYantraLogo from '../assets/images/logo/sri-yantra.png';
 
+type AptitudeQuestion = {
+  id: number;
+  text: string;
+  domain: string;
+  category: string;
+  options: string[];
+  correctAnswer: string;
+  framework?: string;
+};
+
+type PreferenceQuestion = {
+  id: number;
+  text: string;
+  domain: string;
+  framework: string;
+};
+
+const aptitudeQuestions: AptitudeQuestion[] = [
+  {
+    id: 201,
+    text: 'What is the next number in the sequence: 2, 6, 12, 20, ?',
+    domain: 'Numerical Aptitude',
+    category: 'numerical',
+    options: ['24', '28', '30', '32'],
+    correctAnswer: '30',
+    framework: 'Aptitude'
+  },
+  {
+    id: 202,
+    text: 'If 40% of a number is 120, what is the number?',
+    domain: 'Numerical Aptitude',
+    category: 'numerical',
+    options: ['200', '250', '300', '320'],
+    correctAnswer: '300',
+    framework: 'Aptitude'
+  },
+  {
+    id: 203,
+    text: 'A book costs ₹240 after a 20% discount. What was the original price?',
+    domain: 'Numerical Aptitude',
+    category: 'numerical',
+    options: ['₹260', '₹280', '₹300', '₹320'],
+    correctAnswer: '₹300',
+    framework: 'Aptitude'
+  },
+  {
+    id: 204,
+    text: 'Which fraction is the largest?',
+    domain: 'Numerical Aptitude',
+    category: 'numerical',
+    options: ['3/4', '5/8', '7/10', '9/12'],
+    correctAnswer: '3/4',
+    framework: 'Aptitude'
+  },
+  {
+    id: 205,
+    text: 'Which number does not belong to the group?',
+    domain: 'Logical Reasoning',
+    category: 'logical',
+    options: ['16', '25', '36', '48'],
+    correctAnswer: '48',
+    framework: 'Aptitude'
+  },
+  {
+    id: 206,
+    text: 'Find the missing number: 3 → 9, 5 → 25, 7 → ?',
+    domain: 'Logical Reasoning',
+    category: 'logical',
+    options: ['42', '49', '56', '64'],
+    correctAnswer: '49',
+    framework: 'Aptitude'
+  },
+  {
+    id: 207,
+    text: 'All cats are animals. Some animals are wild. Which statement is definitely true?',
+    domain: 'Logical Reasoning',
+    category: 'logical',
+    options: ['All cats are wild', 'Some cats may be wild', 'No cats are wild', 'All wild animals are cats'],
+    correctAnswer: 'Some cats may be wild',
+    framework: 'Aptitude'
+  },
+  {
+    id: 208,
+    text: 'Which comes next in the sequence: A, C, F, J, O, ?',
+    domain: 'Logical Reasoning',
+    category: 'logical',
+    options: ['S', 'T', 'U', 'V'],
+    correctAnswer: 'U',
+    framework: 'Aptitude'
+  },
+  {
+    id: 209,
+    text: 'Choose the word that best completes the sentence: The scientist was known for her ______ approach to problem solving.',
+    domain: 'Verbal Reasoning',
+    category: 'verbal',
+    options: ['careless', 'systematic', 'accidental', 'hurried'],
+    correctAnswer: 'systematic',
+    framework: 'Aptitude'
+  },
+  {
+    id: 210,
+    text: "Choose the word most similar in meaning to 'Reluctant'.",
+    domain: 'Verbal Reasoning',
+    category: 'verbal',
+    options: ['Eager', 'Unwilling', 'Excited', 'Ready'],
+    correctAnswer: 'Unwilling',
+    framework: 'Aptitude'
+  },
+  {
+    id: 211,
+    text: "Choose the word opposite in meaning to 'Transparent'.",
+    domain: 'Verbal Reasoning',
+    category: 'verbal',
+    options: ['Clear', 'Bright', 'Opaque', 'Thin'],
+    correctAnswer: 'Opaque',
+    framework: 'Aptitude'
+  },
+  {
+    id: 212,
+    text: 'Which sentence is grammatically correct?',
+    domain: 'Verbal Reasoning',
+    category: 'verbal',
+    options: ['She don’t like maths.', 'She doesn’t likes maths.', 'She doesn’t like maths.', 'She not like maths.'],
+    correctAnswer: 'She doesn’t like maths.',
+    framework: 'Aptitude'
+  },
+  {
+    id: 213,
+    text: 'If a square is rotated 90 degrees clockwise, how many sides remain in the same position?',
+    domain: 'Spatial Reasoning',
+    category: 'spatial',
+    options: ['0', '1', '2', '4'],
+    correctAnswer: '0',
+    framework: 'Aptitude'
+  },
+  {
+    id: 214,
+    text: 'Which shape completes the pattern: ⬜ 🔺 ⬜ 🔺 ⬜ ?',
+    domain: 'Spatial Reasoning',
+    category: 'spatial',
+    options: ['⬜', '🔺', '⚫', '⬛'],
+    correctAnswer: '🔺',
+    framework: 'Aptitude'
+  },
+  {
+    id: 215,
+    text: 'You are facing North. You turn right, then left, then right. Which direction are you facing now?',
+    domain: 'Spatial Reasoning',
+    category: 'spatial',
+    options: ['North', 'East', 'South', 'West'],
+    correctAnswer: 'East',
+    framework: 'Aptitude'
+  },
+  {
+    id: 216,
+    text: 'How many small cubes make up a 2 × 2 × 2 cube?',
+    domain: 'Spatial Reasoning',
+    category: 'spatial',
+    options: ['4', '6', '8', '12'],
+    correctAnswer: '8',
+    framework: 'Aptitude'
+  }
+];
+
 const CareerAssessmentPage = () => {
   const [user, setUser] = useState<any>(null);
   const [currentStep, setCurrentStep] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [answers, setAnswers] = useState<Record<number, string | number>>({});
   const [isCompleted, setIsCompleted] = useState(false);
   const [report, setReport] = useState<{
     finalScores: { domain: string; score: number; count: number }[];
@@ -20,7 +184,7 @@ const CareerAssessmentPage = () => {
   } | null>(null);
 
   // Sample questions from your assessment logic
-  const questions = [
+  const preferenceQuestions: PreferenceQuestion[] = [
     { id: 1, text: "Do you enjoy solving puzzles, riddles, or brain teasers?", domain: "Analytical", framework: "Aptitude" },
     { id: 2, text: "When faced with a problem, do you prefer to break it into smaller steps before solving?", domain: "General", framework: "Aptitude" },
     { id: 3, text: "How confident are you with numbers and data interpretation?", domain: "Analytical", framework: "Aptitude" },
@@ -92,6 +256,10 @@ const CareerAssessmentPage = () => {
     { value: 5, label: "Strongly Agree" }
   ];
 
+  const aptitudeCount = aptitudeQuestions.length;
+  const preferenceCount = preferenceQuestions.length;
+  const totalQuestionsCount = aptitudeCount + preferenceCount;
+
   useEffect(() => {
     // TEMPORARY: Skip authentication for development
     // TODO: Re-enable authentication when development is complete
@@ -122,12 +290,12 @@ const CareerAssessmentPage = () => {
     */
   }, []);
 
-  const handleAnswer = (questionId: number, value: number) => {
+  const handleAnswer = (questionId: number, value: string | number) => {
     setAnswers(prev => ({ ...prev, [questionId]: value }));
   };
 
   const nextStep = () => {
-    if (currentStep < questions.length - 1) {
+    if (currentStep < totalQuestionsCount - 1) {
       setCurrentStep(prev => prev + 1);
     } else {
       // Complete assessment
@@ -146,9 +314,9 @@ const CareerAssessmentPage = () => {
     // Simple scoring logic based on domains
     const domainScores: Record<string, number[]> = {};
     
-    questions.forEach(q => {
+    preferenceQuestions.forEach(q => {
       const answer = answers[q.id];
-      if (answer) {
+      if (typeof answer === 'number') {
         if (!domainScores[q.domain]) {
           domainScores[q.domain] = [];
         }
@@ -382,7 +550,7 @@ const CareerAssessmentPage = () => {
                 <div class="stat-label">Brain Dominance</div>
               </div>
               <div class="stat-card">
-                <div class="stat-number">${Math.round((totalAnswered/questions.length)*100)}%</div>
+                <div class="stat-number">${Math.round((totalAnswered/totalQuestionsCount)*100)}%</div>
                 <div class="stat-label">Completion Rate</div>
               </div>
             </div>
@@ -586,7 +754,7 @@ const CareerAssessmentPage = () => {
     w.document.close();
   };
 
-  const progress = ((currentStep + 1) / questions.length) * 100;
+  const progress = ((currentStep + 1) / totalQuestionsCount) * 100;
 
   if (!user) {
     return (
@@ -764,7 +932,21 @@ const CareerAssessmentPage = () => {
     );
   }
 
-  const currentQuestion = questions[currentStep];
+  const isAptitudeStage = currentStep < aptitudeCount;
+  const sectionIndex = isAptitudeStage ? currentStep : currentStep - aptitudeCount;
+  const currentQuestion = isAptitudeStage
+    ? aptitudeQuestions[currentStep]
+    : preferenceQuestions[sectionIndex];
+  const sectionQuestionNumber = sectionIndex + 1;
+  const sectionTotal = isAptitudeStage ? aptitudeCount : preferenceCount;
+  const isLastAptitudeQuestion = currentStep === aptitudeCount - 1;
+  const isFinalQuestion = currentStep === totalQuestionsCount - 1;
+  const nextButtonLabel = isFinalQuestion
+    ? 'Complete Assessment'
+    : isLastAptitudeQuestion
+      ? 'Continue to Preferences'
+      : 'Next';
+  const answeredCurrent = answers[currentQuestion.id];
 
   return (
     <div className="min-h-screen bg-teal-600">
@@ -786,10 +968,26 @@ const CareerAssessmentPage = () => {
           </p>
         </div>
         
+        <div className="flex justify-center gap-3 mb-4">
+          <Badge variant={isAptitudeStage ? 'default' : 'outline'} className="px-4 py-2 text-sm">
+            Aptitude ({aptitudeCount})
+          </Badge>
+          <Badge variant={!isAptitudeStage ? 'default' : 'outline'} className="px-4 py-2 text-sm">
+            Preferences ({preferenceCount})
+          </Badge>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-6 bg-white bg-opacity-90 rounded-xl p-4 max-w-md mx-auto">
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Career Assessment</h1>
-          <p className="text-gray-600">Question {currentStep + 1} of {questions.length}</p>
+          <p className="text-gray-600">
+            {isAptitudeStage
+              ? `Aptitude Question ${sectionQuestionNumber} of ${aptitudeCount}`
+              : `Preferences Question ${sectionQuestionNumber} of ${preferenceCount}`}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            Overall {currentStep + 1} of {totalQuestionsCount}
+          </p>
         </div>
 
         {/* Progress Bar */}
@@ -801,12 +999,14 @@ const CareerAssessmentPage = () => {
         {/* Question Card */}
         <Card className="max-w-3xl mx-auto bg-white bg-opacity-95">
           <CardHeader>
-            <div className="hidden mb-4">
+            <div className="mb-4 flex items-center justify-between">
               <Badge variant="secondary" className="text-xs">
-                {currentQuestion.domain} • {currentQuestion.framework}
+                {isAptitudeStage
+                  ? `${currentQuestion.domain} • Aptitude`
+                  : `${currentQuestion.domain} • ${currentQuestion.framework}`}
               </Badge>
               <div className="text-sm text-gray-500">
-                {currentStep + 1} / {questions.length}
+                {sectionQuestionNumber} / {sectionTotal}
               </div>
             </div>
             <CardTitle className="text-xl leading-relaxed text-gray-800">
@@ -814,37 +1014,77 @@ const CareerAssessmentPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3 mb-8">
-              {responseOptions.map((option) => (
-                <label
-                  key={option.value}
-                  className={`flex items-center p-4 rounded-lg border-2 cursor-pointer transition-all hover:border-blue-300 ${
-                    answers[currentQuestion.id] === option.value
-                      ? 'border-blue-600 bg-blue-50'
-                      : 'border-gray-200 bg-white'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name={`question-${currentQuestion.id}`}
-                    value={option.value}
-                    checked={answers[currentQuestion.id] === option.value}
-                    onChange={() => handleAnswer(currentQuestion.id, option.value)}
-                    className="sr-only"
-                  />
-                  <div className={`w-4 h-4 rounded-full border-2 mr-4 ${
-                    answers[currentQuestion.id] === option.value
-                      ? 'border-blue-600 bg-blue-600'
-                      : 'border-gray-300'
-                  }`}>
-                    {answers[currentQuestion.id] === option.value && (
-                      <div className="w-2 h-2 bg-white rounded-full mx-auto mt-1" />
-                    )}
-                  </div>
-                  <span className="text-lg text-gray-700">{option.label}</span>
-                </label>
-              ))}
+            <div className="space-y-3 mb-4">
+              {isAptitudeStage
+                ? currentQuestion.options.map((option) => {
+                    const isSelected = answeredCurrent === option;
+                    return (
+                      <label
+                        key={option}
+                        className={`flex items-center p-4 rounded-lg border-2 cursor-pointer transition-all hover:border-blue-300 ${
+                          isSelected ? 'border-blue-600 bg-blue-50' : 'border-gray-200 bg-white'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name={`question-${currentQuestion.id}`}
+                          value={option}
+                          checked={isSelected}
+                          onChange={() => handleAnswer(currentQuestion.id, option)}
+                          className="sr-only"
+                        />
+                        <div
+                          className={`w-4 h-4 rounded-full border-2 mr-4 ${
+                            isSelected ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
+                          }`}
+                        >
+                          {isSelected && <div className="w-2 h-2 bg-white rounded-full mx-auto mt-1" />}
+                        </div>
+                        <span className="text-lg text-gray-700">{option}</span>
+                      </label>
+                    );
+                  })
+                : responseOptions.map((option) => {
+                    const isSelected = answeredCurrent === option.value;
+                    return (
+                      <label
+                        key={option.value}
+                        className={`flex items-center p-4 rounded-lg border-2 cursor-pointer transition-all hover:border-blue-300 ${
+                          isSelected ? 'border-blue-600 bg-blue-50' : 'border-gray-200 bg-white'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name={`question-${currentQuestion.id}`}
+                          value={option.value}
+                          checked={isSelected}
+                          onChange={() => handleAnswer(currentQuestion.id, option.value)}
+                          className="sr-only"
+                        />
+                        <div
+                          className={`w-4 h-4 rounded-full border-2 mr-4 ${
+                            isSelected ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
+                          }`}
+                        >
+                          {isSelected && <div className="w-2 h-2 bg-white rounded-full mx-auto mt-1" />}
+                        </div>
+                        <span className="text-lg text-gray-700">{option.label}</span>
+                      </label>
+                    );
+                  })}
             </div>
+
+            {!answeredCurrent && (
+              <p className="text-sm text-amber-600 mb-4">
+                Complete this {isAptitudeStage ? 'aptitude' : 'preference'} question to continue.
+              </p>
+            )}
+
+            {!isAptitudeStage && (
+              <div className="mb-4 rounded-lg bg-blue-50 p-3 text-sm text-blue-800">
+                Preferences unlocked after completing aptitude. Continue to finish the remaining questions.
+              </div>
+            )}
 
             {/* Navigation */}
             <div className="flex justify-between">
@@ -859,10 +1099,10 @@ const CareerAssessmentPage = () => {
               
               <Button
                 onClick={nextStep}
-                disabled={!answers[currentQuestion.id]}
+                disabled={!answeredCurrent}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2"
               >
-                {currentStep === questions.length - 1 ? 'Complete Assessment' : 'Next'}
+                {nextButtonLabel}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
