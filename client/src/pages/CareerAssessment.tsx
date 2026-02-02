@@ -1389,16 +1389,21 @@ const CareerAssessmentPage = () => {
             </div>
           </div>
 
-          <!-- Page 4: Career Recommendations -->
+          <!-- Page 4: Career Direction Clusters (For Exploration & Awareness) -->
           <div class="page">
             <div class="a4-page">
             <div class="header">
-              <h1>Career Recommendations</h1>
+              <h1 style="font-weight: 600; letter-spacing: 0.5px; color: #006D77;">Career Direction Clusters (For Exploration & Awareness)</h1>
             </div>
 
-            <h2>Recommended Career Paths</h2>
+            <div style="background: #fff3cd; border-left: 6px solid #eab308; border-radius: 10px; padding: 18px 22px; margin-bottom: 28px;">
+              <span style="font-weight: bold; color: #b45309; font-size: 1.08em;">Note:</span>
+              <span style="color: #7c4700; font-size: 1.08em;"> These career direction clusters are shown to build awareness of long-term possibilities. School students are NOT expected to choose a career now. Your immediate focus should be on academic streams and subjects that match your aptitude and interests.</span>
+            </div>
+
+            <h2 style="font-weight: 500; color: #006D77;">Examples of Roles in This Direction</h2>
             <p style="font-size: 1.1em; color: #666; margin-bottom: 30px;">
-              Based on your top domain scores, here are career suggestions aligned with your natural strengths:
+              Based on your top domain scores, here are <strong>examples of roles</strong> and <strong>skills typically used</strong> in these directions. These are for exploration and awareness only, not fixed recommendations.
             </p>
 
             ${topDomains.map((domain: any, index: number) => {
@@ -1423,16 +1428,15 @@ const CareerAssessmentPage = () => {
                 'General': '#d4822a'
               };
               const domainReasons = {
-                'Analytical': 'Your high analytical score indicates strong logical reasoning, problem-solving abilities, and comfort with data analysis. These skills are essential for making informed decisions and understanding complex systems.',
-                'Verbal': 'Your verbal strength shows excellent communication skills, language proficiency, and ability to express ideas clearly. This is crucial for leadership, teaching, and client-facing roles.',
-                'Creative': 'Your creative aptitude demonstrates innovative thinking, artistic vision, and ability to generate original solutions. This skill set is valuable for design, marketing, and problem-solving roles.',
-                'Technical': 'Your technical competency shows aptitude for understanding systems, working with tools/technology, and hands-on problem solving. This is essential for engineering and technical fields.',
-                'Social': 'Your social intelligence indicates strong interpersonal skills, empathy, and ability to work effectively with others. This is vital for roles involving teamwork and human interaction.',
-                'Musical': 'Your musical abilities show pattern recognition, rhythm sensitivity, and auditory processing skills. These talents can enhance creativity and structure in various career paths.',
-                'Naturalistic': 'Your naturalistic intelligence demonstrates environmental awareness, pattern recognition in nature, and systematic thinking. This supports careers in science and environmental fields.',
-                'General': 'Your general aptitude shows well-rounded abilities and adaptability across multiple areas. This versatility allows flexibility in career choices and management roles.'
+                'Analytical': 'You tend to enjoy logical reasoning, problem-solving, and working with data. These skills are often used in this direction.',
+                'Verbal': 'You show strong communication skills and language proficiency. These are commonly used in this field.',
+                'Creative': 'You demonstrate innovative thinking and artistic vision. These skills are often explored in creative fields.',
+                'Technical': 'You are comfortable with systems, tools, and technology. These are typical in technical directions.',
+                'Social': 'You have strong interpersonal skills and empathy. These are valued in social and people-oriented fields.',
+                'Musical': 'You show pattern recognition and rhythm sensitivity. These are explored in musical and auditory fields.',
+                'Naturalistic': 'You are aware of patterns in nature and systems. These are relevant in natural and environmental fields.',
+                'General': 'You have well-rounded abilities and adaptability. These are useful in many directions.'
               };
-              
               return `
               <div class="recommendation-block" style="margin: 30px 0; padding: 25px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 15px; border-left: 5px solid ${domainColors[domain.domain as keyof typeof domainColors] || '#006D77'};">
                 <div style="display: flex; align-items: flex-start; margin-bottom: 20px;">
@@ -1441,21 +1445,20 @@ const CareerAssessmentPage = () => {
                   </div>
                   <div style="flex: 1;">
                     <h3 style="color: ${domainColors[domain.domain as keyof typeof domainColors] || '#006D77'}; margin: 0 0 10px 0; font-size: 1.4em;">
-                      ${index + 1}. ${domain.domain} Careers (Score: ${domain.score.toFixed(1)}/5.0)
+                      ${index + 1}. ${domain.domain} Direction (Score: ${domain.score.toFixed(1)}/5.0)
                     </h3>
                     <p style="margin: 0 0 15px 0; line-height: 1.6; color: #555; font-size: 1em;">
-                      <strong>Why this matters for you:</strong> ${domainReasons[domain.domain as keyof typeof domainReasons] || 'This area represents one of your key strengths and natural talents.'}
+                      <strong>Skills typically used in this direction:</strong> ${domainReasons[domain.domain as keyof typeof domainReasons] || 'This area represents one of your key strengths and natural talents.'}
                     </p>
                   </div>
                 </div>
-                
-                  <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                  <h4 style="margin: 0 0 15px 0; color: #333; font-size: 1.1em;">Recommended Career Paths:</h4>
+                <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                  <h4 style="margin: 0 0 15px 0; color: #333; font-size: 1.1em;">Common roles people explore in this field:</h4>
                   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
                     ${(careerSuggestions[domain.domain as keyof typeof careerSuggestions] || ['General roles']).map((career: string) => 
                       `<div style="background: linear-gradient(135deg, ${domainColors[domain.domain as keyof typeof domainColors] || '#004d57'}, ${domainColors[domain.domain as keyof typeof domainColors] || '#004d57'}dd); color: white; padding: 18px; border-radius: 8px; text-align: center; box-shadow: 0 3px 12px rgba(0,0,0,0.2);">
                         <div style="font-weight: bold; font-size: 1.1em; margin-bottom: 8px;">${career}</div>
-                        <div style="font-size: 0.85em; opacity: 0.95;">High ${domain.domain.toLowerCase()} aptitude required</div>
+                        <div style="font-size: 0.85em; opacity: 0.95;">Example only – not a fixed path</div>
                       </div>`
                     ).join('')}
                   </div>
@@ -1463,10 +1466,10 @@ const CareerAssessmentPage = () => {
               </div>
             `}).join('')}
 
-            <h2>Career Clusters</h2>
+            <h2 style="font-weight: 500; color: #006D77;">Career Direction Clusters (Exploration Only)</h2>
             <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 5px solid #83C5BE; margin-bottom: 25px;">
               <p style="margin: 0 0 10px 0; color: #555; line-height: 1.6;">
-                These clusters summarize areas worth exploring based on interests, preferences, and demonstrated abilities. They are indicative, not final decisions.
+                These clusters are for <strong>exploration and awareness</strong> only. They are not recommendations or decisions.
               </p>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
                 ${Array.isArray(reportData?.suggestedClusters) && reportData.suggestedClusters.length ? reportData.suggestedClusters.map((c: any, i: number) => `
@@ -1480,15 +1483,21 @@ const CareerAssessmentPage = () => {
               </div>
             </div>
 
-            <h2>Academic Pathway Alignment (Guidance for Grades 8–12)</h2>
+            <div style="margin-top: 40px; margin-bottom: 0;">
+              <div style="background: #e0f2fe; border-left: 6px solid #0284c7; border-radius: 8px; padding: 10px 18px; margin-bottom: 18px;">
+                <span style="font-weight: 500; color: #0369a1; font-size: 1.08em;">Primary decision focus for school students (Grades 8–12)</span>
+              </div>
+            </div>
+            <h2 style="font-weight: 700; color: #004d57; margin-top: 0;">Academic Pathway Alignment</h2>
             <p style="font-size: 1.05em; line-height: 1.7; color: #555; margin-bottom: 20px;">
               This guidance supports subject and course planning. It does not decide careers. Final outcomes depend on marks, eligibility, entrance exams, and institutional criteria.
             </p>
 
-            <h3>After Class 10 — Subject Stream Guidance</h3>
-            <p style="font-size: 1em; line-height: 1.6; color: #555; margin: 10px 0 15px;">
+            <h3 style="font-weight: 600; color: #006D77;">After Class 10 — Subject Stream Guidance</h3>
+            <div style="font-size: 1em; line-height: 1.6; color: #555; margin: 10px 0 15px;">
+              <div style="margin-bottom: 6px; font-weight: 500;">This stage focuses on choosing subjects and streams that keep future options open.</div>
               The pathways below are shown in an order that reflects your current aptitude strengths and interest profile. Options listed later may require additional skill development over time but remain possible.
-            </p>
+            </div>
             <table style="width: 100%; border-collapse: collapse; margin: 15px 0 25px; font-size: 0.95em;">
               <thead>
                 <tr style="background: #006D77; color: white;">
@@ -1515,10 +1524,11 @@ const CareerAssessmentPage = () => {
               </tbody>
             </table>
 
-            <h3>After Class 12 — Course Family Alignment</h3>
-            <p style="font-size: 1em; line-height: 1.6; color: #555; margin: 10px 0 15px;">
+            <h3 style="font-weight: 600; color: #006D77;">After Class 12 — Course Family Alignment</h3>
+            <div style="font-size: 1em; line-height: 1.6; color: #555; margin: 10px 0 15px;">
+              <div style="margin-bottom: 6px; font-weight: 500;">This stage focuses on selecting a course family based on aptitude readiness and sustained interest.</div>
               The pathways below are shown in an order that reflects your current aptitude strengths and interest profile. Options listed later may require additional skill development over time but remain possible.
-            </p>
+            </div>
             <table style="width: 100%; border-collapse: collapse; margin: 15px 0 10px; font-size: 0.95em;">
               <thead>
                 <tr style="background: #006D77; color: white;">
@@ -1547,6 +1557,9 @@ const CareerAssessmentPage = () => {
             <p style="font-size: 0.95em; color: #666; margin-bottom: 20px;">
               Examples are for awareness only. Final eligibility depends on academic performance, entrance exams, and institutional criteria.
             </p>
+            <div style="margin-top: 18px; margin-bottom: 0;">
+              <span style="font-size: 1.05em; color: #006D77; font-weight: 500;">Career directions shown earlier become relevant gradually as students progress through these academic pathways.</span>
+            </div>
 
             <div style="background: #eef7ff; border-left: 5px solid #5390D9; padding: 16px; border-radius: 10px; margin-bottom: 25px;">
               <h3 style="margin: 0 0 8px 0; color: #2d5a5e;">Aptitude Readiness Note</h3>
