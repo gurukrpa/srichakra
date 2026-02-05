@@ -393,7 +393,108 @@ const CareerAssessmentPage = () => {
       .reduce((sum, s) => sum + s.score, 0) / rightBrainDomains.length;
     
     const dominantHemisphere = leftBrainScore > rightBrainScore ? 'Left' : rightBrainScore > leftBrainScore ? 'Right' : 'Balanced';
-    
+
+    // Calculate aptitude scores by category for decision tables
+    const aptitudeScores: Record<string, { correct: number; total: number }> = {
+      'Numerical Aptitude': { correct: 0, total: 0 },
+      'Logical Reasoning': { correct: 0, total: 0 },
+      'Verbal Reasoning': { correct: 0, total: 0 },
+      'Spatial Reasoning': { correct: 0, total: 0 }
+    };
+
+    aptitudeQuestions.forEach(q => {
+      const answer = answers[q.id];
+      if (answer !== undefined) {
+        aptitudeScores[q.domain].total++;
+        if (answer === q.correctAnswer) {
+          aptitudeScores[q.domain].correct++;
+        }
+      }
+    });
+
+    // Calculate percentages and determine readiness levels
+    const aptitudeResults = Object.keys(aptitudeScores).map(domain => {
+      const { correct, total } = aptitudeScores[domain];
+      const percentage = total > 0 ? (correct / total) * 100 : 0;
+      return { domain, correct, total, percentage };
+    }).sort((a, b) => b.percentage - a.percentage);
+
+    // Determine stream readiness based on aptitude patterns
+    const numericalPct = aptitudeResults.find(a => a.domain === 'Numerical Aptitude')?.percentage || 0;
+    const logicalPct = aptitudeResults.find(a => a.domain === 'Logical Reasoning')?.percentage || 0;
+    const verbalPct = aptitudeResults.find(a => a.domain === 'Verbal Reasoning')?.percentage || 0;
+    const spatialPct = aptitudeResults.find(a => a.domain === 'Spatial Reasoning')?.percentage || 0;
+
+    const scienceScore = (numericalPct + logicalPct + spatialPct) / 3;
+    const commerceScore = (numericalPct + verbalPct + logicalPct) / 3;
+    const artsScore = (verbalPct + logicalPct) / 2;
+
+    // Create stream recommendations with readiness levels
+    const streamOptions = [
+      { 
+        stream: 'Science Stream', 
+        score: scienceScore,
+        keyAptitudes: 'Numerical + Logical + Spatial',
+        readiness: scienceScore >= 70 ? 'READY NOW' : scienceScore >= 50 ? 'WITH DEVELOPMENT' : 'EXPLORATORY'
+      },
+      { 
+        stream: 'Commerce Stream', 
+        score: commerceScore,
+        keyAptitudes: 'Numerical + Verbal + Logical',
+        readiness: commerceScore >= 70 ? 'READY NOW' : commerceScore >= 50 ? 'WITH DEVELOPMENT' : 'EXPLORATORY'
+      },
+      { 
+        stream: 'Arts/Humanities Stream', 
+        score: artsScore,
+        keyAptitudes: 'Verbal + Logical',
+        readiness: artsScore >= 70 ? 'READY NOW' : artsScore >= 50 ? 'WITH DEVELOPMENT' : 'EXPLORATORY'
+      }
+    ].sort((a, b) => b.score - a.score);
+
+    // Create course family recommendations (Class 12 pathways)
+    const courseFamilies = [
+      {
+        family: 'Engineering/Technology',
+        requiredAptitudes: 'Numerical + Logical + Spatial',
+        score: (numericalPct + logicalPct + spatialPct) / 3,
+        preferenceAlignment: finalScores.find(s => s.domain === 'Technical')?.score || 2.5
+      },
+      {
+        family: 'Medicine/Life Sciences',
+        requiredAptitudes: 'Numerical + Logical + Verbal',
+        score: (numericalPct + logicalPct + verbalPct) / 3,
+        preferenceAlignment: finalScores.find(s => s.domain === 'Analytical')?.score || 2.5
+      },
+      {
+        family: 'Business/Commerce',
+        requiredAptitudes: 'Numerical + Verbal + Logical',
+        score: commerceScore,
+        preferenceAlignment: finalScores.find(s => s.domain === 'Analytical')?.score || 2.5
+      },
+      {
+        family: 'Law/Social Sciences',
+        requiredAptitudes: 'Verbal + Logical',
+        score: (verbalPct + logicalPct) / 2,
+        preferenceAlignment: finalScores.find(s => s.domain === 'Verbal')?.score || 2.5
+      },
+      {
+        family: 'Arts/Design/Media',
+        requiredAptitudes: 'Spatial + Verbal',
+        score: (spatialPct + verbalPct) / 2,
+        preferenceAlignment: finalScores.find(s => s.domain === 'Creative')?.score || 2.5
+      },
+      {
+        family: 'Pure Sciences/Research',
+        requiredAptitudes: 'Numerical + Logical',
+        score: (numericalPct + logicalPct) / 2,
+        preferenceAlignment: finalScores.find(s => s.domain === 'Analytical')?.score || 2.5
+      }
+    ].map(cf => ({
+      ...cf,
+      combinedScore: (cf.score * 0.6) + (cf.preferenceAlignment * 20 * 0.4), // 60% aptitude, 40% preference
+      readiness: cf.score >= 70 ? 'READY NOW' : cf.score >= 50 ? 'WITH DEVELOPMENT' : 'EXPLORATORY'
+    })).sort((a, b) => b.combinedScore - a.combinedScore);
+
     // Career recommendations based on top domains
     const topDomains = finalScores.slice(0, 3);
     const careerSuggestions = {
@@ -654,21 +755,6 @@ const CareerAssessmentPage = () => {
               </p>
             </div>
 
-            <div class="recommendations" style="margin-top: 30px;">
-              <h3 style="margin-top: 0; color: #006D77;">Aptitude Ability Snapshot</h3>
-              <p style="font-size: 1.05em; line-height: 1.6;">
-                This section reflects objective ability-based questions that assess how you approach numbers, logic, language, and visual patterns. These questions have right or wrong answers and indicate current readiness areas, not fixed potential.
-              </p>
-              <ul style="font-size: 1.05em; line-height: 1.6; margin: 10px 0 15px 20px;">
-                <li>Numerical Reasoning</li>
-                <li>Logical Reasoning</li>
-                <li>Verbal Reasoning</li>
-                <li>Spatial Reasoning</li>
-              </ul>
-              <p style="font-size: 1.05em; line-height: 1.6;">
-                Aptitude results are used to support pathway readiness and do not determine careers.
-              </p>
-            </div>
           </div>
 
           <!-- Page 2: Detailed Charts -->
@@ -800,42 +886,6 @@ const CareerAssessmentPage = () => {
             </div>
 
             <h2>Recommended Career Paths</h2>
-            <p style="font-size: 1.1em; color: #666; margin-bottom: 15px;">
-              The clusters below are suggested using interest patterns, personality preferences, and aptitude readiness together, for exploration and awareness.
-            </p>
-            <p style="font-size: 1.1em; color: #666; margin-bottom: 30px;">
-              These paths blend your strongest preference domains with the aptitude readiness confirmed in the objective stage, helping you match interest with proven capability:
-            </p>
-
-            ${topDomains.map((domain, index) => `
-              <div class="recommendations" style="margin: 25px 0;">
-                <h3 style="color: #006D77; margin-top: 0;">
-                  ${index + 1}. ${domain.domain} Careers (Score: ${domain.score.toFixed(1)}/5.0)
-                </h3>
-                <div class="career-grid">
-                  ${(careerSuggestions[domain.domain as keyof typeof careerSuggestions] || ['General roles']).map((career: string) => 
-                    `<div class="career-item">
-                      <strong>${career}</strong>
-                      <p style="font-size: 0.9em; color: #666; margin: 5px 0 0 0;">
-                        Preference strength in ${domain.domain.toLowerCase()} with aptitude readiness confirmed
-                      </p>
-                    </div>`
-                  ).join('')}
-                </div>
-              </div>
-            `).join('')}
-
-            <h2>Next Steps & Recommendations</h2>
-            <div class="next-steps">
-              <h3 style="margin-top: 0; color: #006D77;">Action Plan</h3>
-              <ol style="font-size: 1.1em; line-height: 1.8;">
-                <li><strong>Explore Further:</strong> Research the recommended career paths that align with your top ${topDomains[0].domain} score.</li>
-                <li><strong>Skill Development:</strong> Consider developing skills in your secondary strength areas: ${topDomains.slice(1,3).map(d => d.domain).join(' and ')}.</li>
-                <li><strong>Educational Path:</strong> Look into degree programs or certifications that support your career interests.</li>
-                <li><strong>Gain Experience:</strong> Seek internships, volunteer work, or projects in your areas of strength.</li>
-                <li><strong>Consult an Expert:</strong> Schedule a follow-up consultation with our career counselors for personalized guidance.</li>
-              </ol>
-            </div>
 
             <div class="page-footer">
               <h3 style="margin: 0 0 10px 0;">Thank You for Taking the Assessment</h3>
